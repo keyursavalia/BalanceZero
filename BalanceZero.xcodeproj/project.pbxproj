@@ -33,7 +33,7 @@
 		3C0A737F2F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZero" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				BalanceZeroTests/BalanceZeroTests.swift,
+				BalanceZeroTests/BalanceOptimizerTests.swift,
 				BalanceZeroUITests/BalanceZeroUITests.swift,
 				BalanceZeroUITests/BalanceZeroUITestsLaunchTests.swift,
 			);
@@ -42,7 +42,7 @@
 		3C0A73802F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				BalanceZeroTests/BalanceZeroTests.swift,
+				BalanceZeroTests/BalanceOptimizerTests.swift,
 			);
 			target = 3C0A73582F49187000294450 /* BalanceZeroTests */;
 		};
