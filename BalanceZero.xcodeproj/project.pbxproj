@@ -29,20 +29,47 @@
 		3C0A73632F49187000294450 /* BalanceZeroUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BalanceZeroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3C0A737F2F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZero" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BalanceZeroTests/BalanceZeroTests.swift,
+				BalanceZeroUITests/BalanceZeroUITests.swift,
+				BalanceZeroUITests/BalanceZeroUITestsLaunchTests.swift,
+			);
+			target = 3C0A734B2F49186F00294450 /* BalanceZero */;
+		};
+		3C0A73802F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BalanceZeroTests/BalanceZeroTests.swift,
+			);
+			target = 3C0A73582F49187000294450 /* BalanceZeroTests */;
+		};
+		3C0A73812F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BalanceZeroUITests/BalanceZeroUITests.swift,
+				BalanceZeroUITests/BalanceZeroUITestsLaunchTests.swift,
+			);
+			target = 3C0A73622F49187000294450 /* BalanceZeroUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3C0A734E2F49186F00294450 /* BalanceZero */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BalanceZero;
 			sourceTree = "<group>";
 		};
-		3C0A735C2F49187000294450 /* BalanceZeroTests */ = {
+		3C0A73762F4918CF00294450 /* Tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BalanceZeroTests;
-			sourceTree = "<group>";
-		};
-		3C0A73662F49187000294450 /* BalanceZeroUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BalanceZeroUITests;
+			exceptions = (
+				3C0A737F2F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZero" target */,
+				3C0A73802F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */,
+				3C0A73812F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */,
+			);
+			path = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -76,8 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				3C0A734E2F49186F00294450 /* BalanceZero */,
-				3C0A735C2F49187000294450 /* BalanceZeroTests */,
-				3C0A73662F49187000294450 /* BalanceZeroUITests */,
+				3C0A73762F4918CF00294450 /* Tests */,
 				3C0A734D2F49186F00294450 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -109,6 +135,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				3C0A734E2F49186F00294450 /* BalanceZero */,
+				3C0A73762F4918CF00294450 /* Tests */,
 			);
 			name = BalanceZero;
 			packageProductDependencies = (
@@ -130,9 +157,6 @@
 			dependencies = (
 				3C0A735B2F49187000294450 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				3C0A735C2F49187000294450 /* BalanceZeroTests */,
-			);
 			name = BalanceZeroTests;
 			packageProductDependencies = (
 			);
@@ -152,9 +176,6 @@
 			);
 			dependencies = (
 				3C0A73652F49187000294450 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				3C0A73662F49187000294450 /* BalanceZeroUITests */,
 			);
 			name = BalanceZeroUITests;
 			packageProductDependencies = (
