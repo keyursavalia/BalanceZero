@@ -1,17 +1,16 @@
-//
-//  BalanceZeroApp.swift
-//  BalanceZero
-//
-//  Created by Keyur Savalia on 2/20/26.
-//
-
 import SwiftUI
 
 @main
 struct BalanceZeroApp: App {
+    @StateObject private var inputVM = InputViewModel()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                InputView()
+                    .environmentObject(inputVM)
+            }
+            .tint(AppTheme.accent)
         }
     }
 }
