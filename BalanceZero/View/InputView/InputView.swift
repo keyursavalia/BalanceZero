@@ -83,43 +83,31 @@ struct InputView: View {
     private var bottomBar: some View {
         VStack(spacing: 0) {
             Divider().opacity(0)
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Current Total")
-                        .font(AppTheme.bodyFont(size: 14))
-                        .foregroundStyle(AppTheme.textSecondary)
-                    Text(vm.currentTotalForDisplay, format: .currency(code: "USD"))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
-                }
-
-                Spacer()
-
-                Button {
-                    vm.calculate()
-                } label: {
-                    HStack(spacing: 8) {
-                        if vm.isCalculating {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("Calculate Zero")
-                                .font(.system(size: 17, weight: .semibold))
-                            Image(systemName: "arrow.right")
-                        }
+            Button {
+                vm.calculate()
+            } label: {
+                HStack(spacing: 8) {
+                    if vm.isCalculating {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("Calculate Zero")
+                            .font(.system(size: 17, weight: .semibold))
+                        Image(systemName: "arrow.right")
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                    .background(
-                        vm.canCalculate ? AppTheme.accent : AppTheme.accent.opacity(0.4),
-                        in: Capsule()
-                    )
                 }
-                .disabled(!vm.canCalculate || vm.isCalculating)
-                .animation(.easeInOut(duration: 0.2), value: vm.canCalculate)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+//                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+                .background(
+                    vm.canCalculate ? AppTheme.accent : AppTheme.accent.opacity(0.4),
+                    in: Capsule()
+                )
             }
-            .padding(.horizontal, 20)
+            .disabled(!vm.canCalculate || vm.isCalculating)
+            .animation(.easeInOut(duration: 0.2), value: vm.canCalculate)
+            .padding(.horizontal, 24)
             .padding(.vertical, 16)
             .background(.ultraThinMaterial)
         }

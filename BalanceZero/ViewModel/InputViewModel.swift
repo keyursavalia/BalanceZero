@@ -27,14 +27,6 @@ final class InputViewModel: ObservableObject {
         return max(0, cents)
     }
     
-    var currentTotalCents: Int {
-        items.reduce(0) { $0 + $1.priceInCents }
-    }
-    
-    var currentTotalForDisplay: Decimal {
-        Decimal(currentTotalCents) / 100
-    }
-    
     var canCalculate: Bool {
         balanceInCents > 0 &&
         balanceInCents <= BalanceOptimizer.maximumSupportedCents &&
