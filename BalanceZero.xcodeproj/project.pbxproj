@@ -34,6 +34,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BalanceZeroTests/BalanceOptimizerTests.swift,
+				BalanceZeroTests/SavedItemListTests.swift,
 				BalanceZeroUITests/BalanceZeroUITests.swift,
 				BalanceZeroUITests/BalanceZeroUITestsLaunchTests.swift,
 			);
@@ -43,6 +44,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BalanceZeroTests/BalanceOptimizerTests.swift,
+				BalanceZeroTests/SavedItemListTests.swift,
 			);
 			target = 3C0A73582F49187000294450 /* BalanceZeroTests */;
 		};
