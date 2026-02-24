@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InputView: View {
     @EnvironmentObject private var vm: InputViewModel
+    @State private var showingSavedLists = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -30,12 +31,16 @@ struct InputView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    // Settings button (to be developed)
+                    showingSavedLists = true
                 } label: {
-                    Image(systemName: "gearshape")
+                    Image(systemName: "list.bullet.rectangle")
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }
+        }
+        .navigationDestination(isPresented: $showingSavedLists) {
+            SavedListsView()
+                .environmentObject(vm)
         }
         .navigationDestination(item: $vm.result) { result in
             ReportView(vm: ReportViewModel(result: result))
