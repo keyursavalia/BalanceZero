@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct BalanceZeroApp: App {
@@ -11,6 +12,7 @@ struct BalanceZeroApp: App {
                     .environmentObject(inputVM)
             }
             .tint(AppTheme.accent)
+            .modelContainer(for: [SavedItemList.self, SavedItem.self])
         }
     }
 }
