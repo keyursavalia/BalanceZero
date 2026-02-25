@@ -1,8 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct InputView: View {
     @EnvironmentObject private var vm: InputViewModel
     @State private var showingSavedLists = false
+    @Query(sort: \SavedItemList.createdAt, order: .reverse) private var savedLists: [SavedItemList]
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -39,7 +41,7 @@ struct InputView: View {
             }
         }
         .navigationDestination(isPresented: $showingSavedLists) {
-            SavedListsView()
+            SavedListsView(isPresented: $showingSavedLists)
                 .environmentObject(vm)
         }
         .navigationDestination(item: $vm.result) { result in
@@ -61,6 +63,23 @@ struct InputView: View {
                 Text("Items to Buy")
                     .font(AppTheme.titleFont())
                     .foregroundStyle(AppTheme.textPrimary)
+                Menu {
+                    if savedLists.isEmpty {
+                        Text("No saved lists yet")
+                            .foregroundStyle(AppTheme.textSecondary)
+                    } else {
+                        ForEach(savedLists) { list in
+                            Button(list.name) {
+                                vm.items = list.items.map { saved in
+                                    ShoppingItem(name: saved.name, priceInCents: saved.priceInCents)
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "chevron.down.circle")
+                        .foregroundStyle(AppTheme.accent)
+                }
                 Spacer()
                 Text(vm.itemCountLabel)
                     .font(AppTheme.bodyFont(size: 14))
