@@ -3,51 +3,80 @@ import SwiftData
 
 struct SavedListDetailView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var inputVM: InputViewModel
 
     @Bindable var list: SavedItemList
+    @Binding var isRootPresented: Bool
 
     @State private var newItemName: String = ""
     @State private var newItemPriceText: String = ""
 
+    private var canAddNewItem: Bool {
+        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return false }
+
+        let cleanedPrice = newItemPriceText
+            .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+            .trimmingCharacters(in: .whitespaces)
+
+        guard let value = Decimal(string: cleanedPrice) else { return false }
+        let cents = NSDecimalNumber(decimal: value * 100).intValue
+        return cents > 0
+    }
+
     var body: some View {
-        Form {
-            Section(header: Text("List Name")) {
-                TextField("Name", text: $list.name)
-            }
+        ZStack {
+            AppTheme.background.ignoresSafeArea()
 
-            Section(header: Text("Items")) {
-                ForEach(list.items) { item in
+            Form {
+                Section(header: Text("List Name").font(.headline)) {
+                    TextField("Name", text: $list.name)
+                        .font(.system(size: 17, weight: .semibold))
+                }
+
+                Section(header: Text("Items").font(.headline)) {
+                    ForEach(list.items) { item in
+                        HStack {
+                            TextField("Item name", text: binding(for: item, keyPath: \.name))
+                            HStack(spacing: 4) {
+                                Text("$")
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                TextField("0.00", text: bindingForPrice(of: item))
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                        }
+                    }
+                    .onDelete(perform: deleteItems)
+
                     HStack {
-                        TextField("Item name", text: binding(for: item, keyPath: \.name))
-                        TextField("Price", text: bindingForPrice(of: item))
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
+                        TextField("New item name", text: $newItemName)
+                        HStack(spacing: 4) {
+                            Text("$")
+                                .foregroundStyle(canAddNewItem ? AppTheme.textSecondary : AppTheme.textSecondary.opacity(0.5))
+                            TextField("0.00", text: $newItemPriceText)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        Button {
+                            addNewItem()
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(canAddNewItem ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                        }
+                        .disabled(!canAddNewItem)
                     }
-                }
-                .onDelete(perform: deleteItems)
-
-                HStack {
-                    TextField("New item name", text: $newItemName)
-                    TextField("0.00", text: $newItemPriceText)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                    Button {
-                        addNewItem()
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                    }
-                    .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle(list.name.isEmpty ? "List" : list.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Use List") {
                     applyToInput()
-                    dismiss()
+                    isRootPresented = false
                 }
                 .disabled(list.items.isEmpty)
             }
@@ -59,7 +88,7 @@ struct SavedListDetailView: View {
 
     private func addNewItem() {
         let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return }
+        guard !trimmedName.isEmpty, canAddNewItem else { return }
 
         let cleanedPrice = newItemPriceText
             .replacingOccurrences(of: "$", with: "")
