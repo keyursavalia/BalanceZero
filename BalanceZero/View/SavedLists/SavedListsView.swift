@@ -3,17 +3,17 @@ import SwiftData
 
 struct SavedListsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var inputVM: InputViewModel
     @Query(sort: \SavedItemList.createdAt, order: .reverse) private var lists: [SavedItemList]
     @State private var isPresentingNewListSheet = false
+    @Binding var isPresented: Bool
 
     var body: some View {
         List {
             Section {
                 ForEach(lists) { list in
                     NavigationLink {
-                        SavedListDetailView(list: list)
+                        SavedListDetailView(list: list, isRootPresented: $isPresented)
                             .environmentObject(inputVM)
                     } label: {
                         HStack {
@@ -26,9 +26,6 @@ struct SavedListsView: View {
                                     .foregroundStyle(AppTheme.textSecondary)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(AppTheme.textSecondary)
                         }
                         .padding(.vertical, 4)
                     }
@@ -47,11 +44,6 @@ struct SavedListsView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle("Saved Lists")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Close") {
-                    dismiss()
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     isPresentingNewListSheet = true
