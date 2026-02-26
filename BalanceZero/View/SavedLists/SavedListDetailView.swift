@@ -8,21 +8,13 @@ struct SavedListDetailView: View {
     @Bindable var list: SavedItemList
     @Binding var isRootPresented: Bool
 
-    @State private var newItemName: String = ""
-    @State private var newItemPriceText: String = ""
+    @State private var draftItems: [DraftItem] = [DraftItem()]
+    @State private var showNameRequiredAlert = false
 
-    private var canAddNewItem: Bool {
-        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return false }
-
-        let cleanedPrice = newItemPriceText
-            .replacingOccurrences(of: "$", with: "")
-            .replacingOccurrences(of: ",", with: "")
-            .trimmingCharacters(in: .whitespaces)
-
-        guard let value = Decimal(string: cleanedPrice) else { return false }
-        let cents = NSDecimalNumber(decimal: value * 100).intValue
-        return cents > 0
+    struct DraftItem: Identifiable {
+        let id = UUID()
+        var name: String = ""
+        var priceText: String = ""
     }
 
     var body: some View {
@@ -44,28 +36,35 @@ struct SavedListDetailView: View {
                                     .foregroundStyle(AppTheme.textSecondary)
                                 TextField("0.00", text: bindingForPrice(of: item))
                                     .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.trailing)
+                                    .multilineTextAlignment(.leading)
                             }
                         }
                     }
                     .onDelete(perform: deleteItems)
 
-                    HStack {
-                        TextField("New item name", text: $newItemName)
-                        HStack(spacing: 4) {
-                            Text("$")
-                                .foregroundStyle(canAddNewItem ? AppTheme.textSecondary : AppTheme.textSecondary.opacity(0.5))
-                            TextField("0.00", text: $newItemPriceText)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                    ForEach($draftItems) { $draft in
+                        HStack {
+                            TextField("New item name", text: $draft.name)
+                            HStack(spacing: 4) {
+                                Text("$")
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                TextField("0.00", text: $draft.priceText)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.leading)
+                            }
                         }
-                        Button {
-                            addNewItem()
-                        } label: {
+                    }
+
+                    Button {
+                        saveAllValidDrafts()
+                        addNewDraftRow()
+                    } label: {
+                        HStack {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(canAddNewItem ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                                .foregroundStyle(AppTheme.accent)
+                            Text("Add Item Row")
+                                .foregroundStyle(AppTheme.accent)
                         }
-                        .disabled(!canAddNewItem)
                     }
                 }
             }
@@ -82,30 +81,67 @@ struct SavedListDetailView: View {
             }
         }
         .onDisappear {
+            // Save any remaining valid draft items
+            saveAllValidDrafts()
+
+            // Validate that the list has a name
+            let trimmedName = list.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedName.isEmpty && !list.items.isEmpty {
+                // If name is empty but items exist, show alert
+                showNameRequiredAlert = true
+            } else if trimmedName.isEmpty && list.items.isEmpty {
+                // If name is empty and no items, delete the list
+                modelContext.delete(list)
+            } else {
+                list.name = trimmedName
+            }
+
             try? modelContext.save()
+        }
+        .alert("List Name Required", isPresented: $showNameRequiredAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please provide a name for this list before saving.")
         }
     }
 
-    private func addNewItem() {
-        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty, canAddNewItem else { return }
+    private func saveAllValidDrafts() {
+        var savedDraftIds: [UUID] = []
 
-        let cleanedPrice = newItemPriceText
-            .replacingOccurrences(of: "$", with: "")
-            .replacingOccurrences(of: ",", with: "")
-            .trimmingCharacters(in: .whitespaces)
+        for draft in draftItems {
+            let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else { continue }
 
-        let cents: Int
-        if let value = Decimal(string: cleanedPrice) {
-            cents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
-        } else {
-            cents = 0
+            let cleanedPrice = draft.priceText
+                .replacingOccurrences(of: "$", with: "")
+                .replacingOccurrences(of: ",", with: "")
+                .trimmingCharacters(in: .whitespaces)
+
+            guard !cleanedPrice.isEmpty,
+                  let value = Decimal(string: cleanedPrice),
+                  value > 0 else { continue }
+
+            let cents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
+
+            // Check if not already in list
+            if !list.items.contains(where: { $0.name == trimmedName && $0.priceInCents == cents }) {
+                let item = SavedItem(name: trimmedName, priceInCents: cents, list: list)
+                list.items.append(item)
+                savedDraftIds.append(draft.id)
+            }
         }
 
-        let item = SavedItem(name: trimmedName, priceInCents: cents, list: list)
-        list.items.append(item)
-        newItemName = ""
-        newItemPriceText = ""
+        // Remove saved drafts
+        draftItems.removeAll { savedDraftIds.contains($0.id) }
+
+        // Ensure at least one empty draft exists
+        if draftItems.isEmpty {
+            draftItems.append(DraftItem())
+        }
+    }
+
+    private func addNewDraftRow() {
+        draftItems.append(DraftItem())
     }
 
     private func deleteItems(at offsets: IndexSet) {
