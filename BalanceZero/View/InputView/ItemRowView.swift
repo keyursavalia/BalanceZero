@@ -38,7 +38,7 @@ struct ItemRowView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(item.priceInCents > 0 ? AppTheme.textPrimary : AppTheme.textSecondary)
                         .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
+                        .multilineTextAlignment(.leading)
                         .focused($priceFocused)
                         .frame(minWidth: 60, maxWidth: 90)
                         .onChange(of: priceText) { _, newValue in
