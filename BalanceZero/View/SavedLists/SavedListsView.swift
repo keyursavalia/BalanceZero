@@ -6,6 +6,7 @@ struct SavedListsView: View {
     @EnvironmentObject private var inputVM: InputViewModel
     @Query(sort: \SavedItemList.createdAt, order: .reverse) private var lists: [SavedItemList]
     @State private var isPresentingNewListSheet = false
+    @State private var newlyCreatedList: SavedItemList?
     @Binding var isPresented: Bool
 
     var body: some View {
@@ -56,19 +57,25 @@ struct SavedListsView: View {
         .sheet(isPresented: $isPresentingNewListSheet) {
             NavigationStack {
                 NewSavedListView { name in
-                    createList(named: name)
+                    let list = createList(named: name)
+                    newlyCreatedList = list
                 }
             }
         }
+        .navigationDestination(item: $newlyCreatedList) { list in
+            SavedListDetailView(list: list, isRootPresented: $isPresented)
+                .environmentObject(inputVM)
+        }
     }
 
-    private func createList(named name: String) {
+    private func createList(named name: String) -> SavedItemList? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty else { return nil }
 
         let list = SavedItemList(name: trimmed)
         modelContext.insert(list)
         try? modelContext.save()
+        return list
     }
 
     private func deleteLists(at offsets: IndexSet) {
