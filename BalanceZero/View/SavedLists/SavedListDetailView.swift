@@ -38,6 +38,13 @@ struct SavedListDetailView: View {
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.leading)
                             }
+                            Button {
+                                deleteItem(item)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(.red)
+                                    .font(.system(size: 14))
+                            }
                         }
                     }
                     .onDelete(perform: deleteItems)
@@ -78,6 +85,12 @@ struct SavedListDetailView: View {
                     isRootPresented = false
                 }
                 .disabled(list.items.isEmpty)
+            }
+        }
+        .onAppear {
+            // Ensure at least one draft row exists when view appears
+            if draftItems.isEmpty {
+                draftItems.append(DraftItem())
             }
         }
         .onDisappear {
@@ -133,15 +146,17 @@ struct SavedListDetailView: View {
 
         // Remove saved drafts
         draftItems.removeAll { savedDraftIds.contains($0.id) }
-
-        // Ensure at least one empty draft exists
-        if draftItems.isEmpty {
-            draftItems.append(DraftItem())
-        }
     }
 
     private func addNewDraftRow() {
         draftItems.append(DraftItem())
+    }
+
+    private func deleteItem(_ item: SavedItem) {
+        if let index = list.items.firstIndex(where: { $0.id == item.id }) {
+            list.items.remove(at: index)
+            modelContext.delete(item)
+        }
     }
 
     private func deleteItems(at offsets: IndexSet) {
@@ -149,6 +164,7 @@ struct SavedListDetailView: View {
             let item = list.items[index]
             modelContext.delete(item)
         }
+        list.items.remove(atOffsets: offsets)
     }
 
     private func binding(for item: SavedItem, keyPath: ReferenceWritableKeyPath<SavedItem, String>) -> Binding<String> {
