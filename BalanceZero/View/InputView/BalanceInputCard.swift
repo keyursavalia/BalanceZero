@@ -5,10 +5,7 @@ struct BalanceInputCard: View {
     let balanceInCents: Int
     @FocusState private var isFocused: Bool
 
-    /// Display string: "0.00" when empty (grey placeholder), otherwise "X.XX". Period is fixed.
     @State private var displayText: String = "0.00"
-
-    /// Only grey when empty; never grey user-entered digits.
     private var hasValue: Bool { !balanceText.isEmpty }
 
     var body: some View {
@@ -42,28 +39,15 @@ struct BalanceInputCard: View {
         .onTapGesture { isFocused = true }
         .onAppear { syncDisplayFromBalance() }
         .onChange(of: balanceText) { _, newValue in
-            if formatDigitsToAmount(extractDigits(from: newValue)) != newValue {
+            if CurrencyInputHelper.formatDigitsToAmount(CurrencyInputHelper.extractDigits(from: newValue)) != newValue {
                 syncDisplayFromBalance()
             }
         }
     }
 
-    private func extractDigits(from s: String) -> String {
-        String(s.filter { $0.isNumber }.prefix(5))
-    }
-
-    private func formatDigitsToAmount(_ digits: String) -> String {
-        if digits.isEmpty { return "0.00" }
-        let padded = String(repeating: "0", count: max(0, 3 - digits.count)) + digits
-        let centsPart = String(padded.suffix(2))
-        let dollarsPart = String(padded.dropLast(2))
-        let trimmedDollars = dollarsPart.drop(while: { $0 == "0" })
-        return "\(trimmedDollars.isEmpty ? "0" : String(trimmedDollars)).\(centsPart)"
-    }
-
     private func processBalanceInput(_ raw: String) {
-        let digits = extractDigits(from: raw)
-        let formatted = formatDigitsToAmount(digits)
+        let digits = CurrencyInputHelper.extractDigits(from: raw)
+        let formatted = CurrencyInputHelper.formatDigitsToAmount(digits)
         displayText = formatted
         balanceText = formatted
     }
@@ -72,8 +56,8 @@ struct BalanceInputCard: View {
         if balanceText.isEmpty {
             displayText = "0.00"
         } else {
-            let digits = extractDigits(from: balanceText)
-            let formatted = formatDigitsToAmount(digits)
+            let digits = CurrencyInputHelper.extractDigits(from: balanceText)
+            let formatted = CurrencyInputHelper.formatDigitsToAmount(digits)
             displayText = formatted
             if balanceText != formatted {
                 balanceText = formatted

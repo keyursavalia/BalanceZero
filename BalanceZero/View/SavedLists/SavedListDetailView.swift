@@ -14,7 +14,7 @@ struct SavedListDetailView: View {
     struct DraftItem: Identifiable {
         let id = UUID()
         var name: String = ""
-        var priceText: String = ""
+        var priceInCents: Int = 0
     }
 
     var body: some View {
@@ -31,13 +31,7 @@ struct SavedListDetailView: View {
                     ForEach(list.items) { item in
                         HStack {
                             TextField("Item name", text: binding(for: item, keyPath: \.name))
-                            HStack(spacing: 4) {
-                                Text("$")
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                TextField("0.00", text: bindingForPrice(of: item))
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.leading)
-                            }
+                            CurrencyPriceField(priceInCents: bindingForPriceInCents(of: item))
                             Button {
                                 deleteItem(item)
                             } label: {
@@ -52,13 +46,7 @@ struct SavedListDetailView: View {
                     ForEach($draftItems) { $draft in
                         HStack {
                             TextField("New item name", text: $draft.name)
-                            HStack(spacing: 4) {
-                                Text("$")
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                TextField("0.00", text: $draft.priceText)
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.leading)
-                            }
+                            CurrencyPriceField(priceInCents: $draft.priceInCents)
                         }
                     }
 
@@ -124,21 +112,11 @@ struct SavedListDetailView: View {
         for draft in draftItems {
             let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmedName.isEmpty else { continue }
-
-            let cleanedPrice = draft.priceText
-                .replacingOccurrences(of: "$", with: "")
-                .replacingOccurrences(of: ",", with: "")
-                .trimmingCharacters(in: .whitespaces)
-
-            guard !cleanedPrice.isEmpty,
-                  let value = Decimal(string: cleanedPrice),
-                  value > 0 else { continue }
-
-            let cents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
+            guard draft.priceInCents > 0 else { continue }
 
             // Check if not already in list
-            if !list.items.contains(where: { $0.name == trimmedName && $0.priceInCents == cents }) {
-                let item = SavedItem(name: trimmedName, priceInCents: cents, list: list)
+            if !list.items.contains(where: { $0.name == trimmedName && $0.priceInCents == draft.priceInCents }) {
+                let item = SavedItem(name: trimmedName, priceInCents: draft.priceInCents, list: list)
                 list.items.append(item)
                 savedDraftIds.append(draft.id)
             }
@@ -176,24 +154,10 @@ struct SavedListDetailView: View {
         )
     }
 
-    private func bindingForPrice(of item: SavedItem) -> Binding<String> {
+    private func bindingForPriceInCents(of item: SavedItem) -> Binding<Int> {
         Binding(
-            get: {
-                let decimal = Decimal(item.priceInCents) / 100
-                return NSDecimalNumber(decimal: decimal).stringValue
-            },
-            set: { newText in
-                let cleaned = newText
-                    .replacingOccurrences(of: "$", with: "")
-                    .replacingOccurrences(of: ",", with: "")
-                    .trimmingCharacters(in: .whitespaces)
-
-                if let value = Decimal(string: cleaned) {
-                    item.priceInCents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
-                } else {
-                    item.priceInCents = 0
-                }
-            }
+            get: { item.priceInCents },
+            set: { item.priceInCents = $0 }
         )
     }
 
