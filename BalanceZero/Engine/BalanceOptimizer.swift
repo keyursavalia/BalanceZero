@@ -28,23 +28,52 @@ struct BalanceOptimizer {
         
         guard input.isValid else { return nil }
         
-        let capacity = input.balanceInCents
+        let balance = input.balanceInCents
         
-        let validItems = input.items.filter { $0.priceInCents > 0 && $0.priceInCents <= capacity }
-        guard !validItems.isEmpty else {
+        // 1. Mandatory items: user-required base
+        let mandatoryItems = input.items
+            .filter { $0.mandatoryQuantity > 0 && $0.priceInCents > 0 }
+            .map { SelectedItem(item: $0, quantity: $0.mandatoryQuantity) }
+        let mandatoryTotal = mandatoryItems.reduce(0) { $0 + $1.totalCents }
+
+        if mandatoryTotal > balance {
             return OptimizationResult(
                 balanceInCents: input.balanceInCents,
                 selectedItems: [],
                 matchQuality: .noSolution)
         }
+
+        let remainingBalance = balance - mandatoryTotal
+
+        // 2. Optional items: optimize to exhaust remaining balance
+        let optionalItems = input.items.filter { $0.mandatoryQuantity == 0 }
+        let validItems = optionalItems.filter { $0.priceInCents > 0 && $0.priceInCents <= remainingBalance }
         
-        // dp[c] = max spend achievable using all capacity
-        var dp = [Int](repeating: -1, count: capacity + 1)  // we use -1 as sentinel for "unreachable"
+        var optionalSelected: [SelectedItem] = []
+        var optionalTotal = 0
+
+        if !validItems.isEmpty && remainingBalance > 0 {
+            let (amount, items) = runDPAndReconstruct(capacity: remainingBalance, validItems: validItems)
+            optionalTotal = amount
+            optionalSelected = items
+        }
+
+        let allSelected = (mandatoryItems + optionalSelected).sorted { $0.totalCents > $1.totalCents }
+        let totalSpent = mandatoryTotal + optionalTotal
+        let leftover = balance - totalSpent
+        let quality: MatchQuality = leftover == 0 ? .perfect : (mandatoryTotal > 0 || totalSpent > 0 ? .partial(remainingCents: leftover) : .noSolution)
+
+        return OptimizationResult(
+            balanceInCents: input.balanceInCents,
+            selectedItems: allSelected,
+            matchQuality: quality)
+    }
+
+    private func runDPAndReconstruct(capacity: Int, validItems: [ShoppingItem]) -> (Int, [SelectedItem]) {
+        var dp = [Int](repeating: -1, count: capacity + 1)
         dp[0] = 0
-        
-        // itemUsed[c] = index into validItems that was last added to reach dp[c]
         var itemUsed = [Int](repeating: -1, count: capacity + 1)
-        
+
         for c in 1...capacity {
             for (index, item) in validItems.enumerated() {
                 let price = item.priceInCents
@@ -58,8 +87,7 @@ struct BalanceOptimizer {
                 }
             }
         }
-        
-        // start from capacity and walk down to find out best reachable amount
+
         var bestAmount = 0
         for c in stride(from: capacity, through: 0, by: -1) {
             if dp[c] >= 0 {
@@ -67,35 +95,16 @@ struct BalanceOptimizer {
                 break
             }
         }
-        
-        if bestAmount == 0 {
-            return OptimizationResult(
-                balanceInCents: input.balanceInCents,
-                selectedItems: [],
-                matchQuality: .noSolution)
-        }
-        
-        // reconstruction: items chosen by backtracking
-        var selected: [Int: Int] = [:]  // itemIndex -> quantity
+
+        var selected: [Int: Int] = [:]
         var remaining = bestAmount
-        
         while remaining > 0 {
             let idx = itemUsed[remaining]
             guard idx >= 0 else { break }
             selected[idx, default: 0] += 1
             remaining -= validItems[idx].priceInCents
         }
-        
-        let selectedItems: [SelectedItem] = selected.map { idx, qty in
-            SelectedItem(item: validItems[idx], quantity: qty)
-        }.sorted { $0.totalCents > $1.totalCents }
-        
-        let leftover = input.balanceInCents - bestAmount
-        let quality: MatchQuality = leftover == 0 ? .perfect : .partial(remainingCents: leftover)
-        
-        return OptimizationResult(
-            balanceInCents: input.balanceInCents,
-            selectedItems: selectedItems,
-            matchQuality: quality)
+        let items = selected.map { idx, qty in SelectedItem(item: validItems[idx], quantity: qty) }
+        return (bestAmount, items)
     }
 }
