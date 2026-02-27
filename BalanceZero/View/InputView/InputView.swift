@@ -28,9 +28,12 @@ struct InputView: View {
 
             bottomBar
         }
-        .navigationTitle("BalanceZero")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("BalanceZero")
+                    .font(.headline)
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showingSavedLists = true
