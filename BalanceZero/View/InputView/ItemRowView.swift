@@ -3,9 +3,12 @@ import SwiftUI
 struct ItemRowView: View {
     @Binding var item: ShoppingItem
 
-    @State private var priceText: String = ""
+    /// Display string: "0.00" when empty (grey placeholder), otherwise "X.XX". Period is fixed; max 5 digits.
+    @State private var priceDisplayText: String = "0.00"
     @FocusState private var nameFocused: Bool
     @FocusState private var priceFocused: Bool
+
+    private var priceHasValue: Bool { item.priceInCents > 0 || priceDisplayText != "0.00" }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -63,49 +66,69 @@ struct ItemRowView: View {
                     .font(.system(size: 12, weight: .regular))
                     .foregroundStyle(AppTheme.textSecondary)
 
-                HStack(spacing: 2) {
+                HStack(alignment: .center, spacing: 2) {
                     Text("$")
-                        .foregroundStyle(item.priceInCents > 0 ? AppTheme.textSecondary : AppTheme.textSecondary.opacity(0.5))
-                        .font(.system(size: 15))
+                        .foregroundStyle(priceHasValue ? AppTheme.textPrimary : AppTheme.textSecondary.opacity(0.5))
+                        .font(.system(size: 17, weight: .semibold))
 
-                    TextField("0.00", text: $priceText)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(item.priceInCents > 0 ? AppTheme.textPrimary : AppTheme.textSecondary)
+                    TextField("0.00", text: $priceDisplayText)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(priceHasValue ? AppTheme.textPrimary : AppTheme.textSecondary)
                         .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.leading)
+                        .multilineTextAlignment(.trailing)
                         .focused($priceFocused)
-                        .frame(minWidth: 60, maxWidth: 90)
-                        .onChange(of: priceText) { _, newValue in
-                            commitPrice(newValue)
+                        .frame(width: 56, alignment: .trailing)
+                        .onChange(of: priceDisplayText) { _, newValue in
+                            processPriceInput(newValue)
                         }
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .frame(width: 76, alignment: .trailing)
         }
         .padding(20)
         .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 3)
-        .onAppear {
-            if item.priceInCents > 0 {
-                priceText = formatCentsToString(item.priceInCents)
-            }
+        .onAppear { syncPriceDisplayFromItem() }
+        .onChange(of: item.priceInCents) { _, _ in
+            syncPriceDisplayFromItem()
         }
     }
 
-    private func commitPrice(_ text: String) {
-        let cleaned = text.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")
-        if let value = Decimal(string: cleaned) {
-            // Truncate to 2 decimal places (max 2 digits after period)
-            let truncated = NSDecimalNumber(decimal: value * 100).intValue
-            item.priceInCents = max(0, truncated)
+    private func extractDigits(from s: String) -> String {
+        String(s.filter { $0.isNumber }.prefix(5))
+    }
+
+    private func formatDigitsToPrice(_ digits: String) -> String {
+        if digits.isEmpty { return "0.00" }
+        let padded = String(repeating: "0", count: max(0, 3 - digits.count)) + digits
+        let centsPart = String(padded.suffix(2))
+        let dollarsPart = String(padded.dropLast(2))
+        let trimmedDollars = dollarsPart.drop(while: { $0 == "0" })
+        return "\(trimmedDollars.isEmpty ? "0" : String(trimmedDollars)).\(centsPart)"
+    }
+
+    private func processPriceInput(_ raw: String) {
+        let digits = extractDigits(from: raw)
+        let formatted = formatDigitsToPrice(digits)
+        priceDisplayText = formatted
+        if let value = Decimal(string: formatted) {
+            item.priceInCents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
         } else {
             item.priceInCents = 0
         }
-        // Sync display to enforce max 2 decimals (e.g. "12.999" → "12.99")
-        priceText = formatCentsToString(item.priceInCents)
     }
 
-    private func formatCentsToString(_ cents: Int) -> String {
-        let value = Decimal(cents) / 100
-        return "\(value)"
+    private func syncPriceDisplayFromItem() {
+        if item.priceInCents == 0 {
+            priceDisplayText = "0.00"
+        } else {
+            let digits = String(item.priceInCents)
+            let padded = String(repeating: "0", count: max(0, 3 - digits.count)) + digits
+            let centsPart = String(padded.suffix(2))
+            let dollarsPart = String(padded.dropLast(2))
+            let trimmedDollars = dollarsPart.drop(while: { $0 == "0" })
+            priceDisplayText = "\(trimmedDollars.isEmpty ? "0" : String(trimmedDollars)).\(centsPart)"
+        }
     }
 }
