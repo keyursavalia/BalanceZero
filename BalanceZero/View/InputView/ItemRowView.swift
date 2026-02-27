@@ -60,10 +60,14 @@ struct ItemRowView: View {
     private func commitPrice(_ text: String) {
         let cleaned = text.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")
         if let value = Decimal(string: cleaned) {
-            item.priceInCents = max(0, NSDecimalNumber(decimal: value * 100).intValue)
+            // Truncate to 2 decimal places (max 2 digits after period)
+            let truncated = NSDecimalNumber(decimal: value * 100).intValue
+            item.priceInCents = max(0, truncated)
         } else {
             item.priceInCents = 0
         }
+        // Sync display to enforce max 2 decimals (e.g. "12.999" → "12.99")
+        priceText = formatCentsToString(item.priceInCents)
     }
 
     private func formatCentsToString(_ cents: Int) -> String {
