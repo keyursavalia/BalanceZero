@@ -6,68 +6,94 @@ struct ItemRowView: View {
     @FocusState private var nameFocused: Bool
 
     var body: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Item Name")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(AppTheme.textSecondary)
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Item Name")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(AppTheme.textSecondary)
 
-                TextField("New Item...", text: $item.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .focused($nameFocused)
-                    .submitLabel(.next)
-                    .onSubmit { }
-            }
-
-            Spacer()
-
-            VStack(alignment: .center, spacing: 4) {
-                Text("Qty")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(AppTheme.textSecondary)
-
-                HStack(spacing: 6) {
-                    Button {
-                        if item.mandatoryQuantity > 0 {
-                            item.mandatoryQuantity -= 1
-                        }
-                    } label: {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("\(item.mandatoryQuantity)")
+                    TextField("New Item...", text: $item.name)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                        .frame(minWidth: 24, alignment: .center)
-
-                    Button {
-                        item.mandatoryQuantity += 1
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .buttonStyle(.plain)
+                        .focused($nameFocused)
+                        .submitLabel(.next)
+                        .onSubmit { }
                 }
-                .padding(.horizontal, 4)
-            }
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Price")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(AppTheme.textSecondary)
+                Spacer()
 
-                CurrencyPriceField(priceInCents: $item.priceInCents)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                VStack(alignment: .center, spacing: 4) {
+                    Text("Qty")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(AppTheme.textSecondary)
+
+                    HStack(spacing: 6) {
+                        Button {
+                            if item.mandatoryQuantity > 0 {
+                                item.mandatoryQuantity -= 1
+                            }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.system(size: 22))
+                                .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                        }
+                        .buttonStyle(.plain)
+
+                        Text("\(item.mandatoryQuantity)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .frame(minWidth: 24, alignment: .center)
+
+                        Button {
+                            item.mandatoryQuantity += 1
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 22))
+                                .foregroundStyle(AppTheme.accent)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 4)
+                }
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Price")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(AppTheme.textSecondary)
+
+                    CurrencyPriceField(priceInCents: $item.priceInCents)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .frame(width: 76, alignment: .trailing)
             }
-            .frame(width: 76, alignment: .trailing)
+            .padding(20)
+
+            // Subtle quantity-constraint hint when user has set a quantity
+            if item.mandatoryQuantity > 0 {
+                quantityConstraintHint
+            }
         }
-        .padding(20)
         .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 3)
+    }
+
+    @ViewBuilder
+    private var quantityConstraintHint: some View {
+        HStack(spacing: 8) {
+            Text("Include:")
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(AppTheme.textSecondary)
+
+            Picker("Quantity constraint", selection: $item.quantityConstraint) {
+                Text("Exactly \(item.mandatoryQuantity)").tag(QuantityConstraint.exact)
+                Text("At least \(item.mandatoryQuantity)").tag(QuantityConstraint.minimum)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
+        .padding(.top, 4)
     }
 }
