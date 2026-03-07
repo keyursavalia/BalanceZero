@@ -7,8 +7,8 @@ final class BalanceOptimizerTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func item(id: UUID = UUID(), _ name: String, cents: Int) -> ShoppingItem {
-        ShoppingItem(id: id, name: name, priceInCents: cents)
+    private func item(id: UUID = UUID(), _ name: String, cents: Int, mandatoryQuantity: Int = 0, quantityConstraint: QuantityConstraint = .exact) -> ShoppingItem {
+        ShoppingItem(id: id, name: name, priceInCents: cents, mandatoryQuantity: mandatoryQuantity, quantityConstraint: quantityConstraint)
     }
 
     private func input(balance: Int, items: [ShoppingItem]) -> BalanceOptimizer.Input {
@@ -161,5 +161,59 @@ final class BalanceOptimizerTests: XCTestCase {
         result?.selectedItems.forEach { selected in
             XCTAssertEqual(selected.totalCents, selected.item.priceInCents * selected.quantity)
         }
+    }
+
+    // MARK: - Mandatory Quantity (Exact vs Minimum) Tests
+
+    func testExactMandatoryQuantityIncludedExactly() {
+        // User wants exactly 3 avocados at $3.99 each; balance $15.00
+        // Should get exactly 3 avocados ($11.97), leftover $3.03
+        let avocado = item("Avocado", cents: 399, mandatoryQuantity: 3, quantityConstraint: .exact)
+        let i = input(balance: 1500, items: [avocado])
+        let result = optimizer.optimize(input: i)
+        XCTAssertNotNil(result)
+        let avocadoSelected = result?.selectedItems.first { $0.item.name == "Avocado" }
+        XCTAssertEqual(avocadoSelected?.quantity, 3)
+    }
+
+    func testMinimumMandatoryQuantityAllowsMoreWhenBetterOptimization() {
+        // User wants at least 10 tomatoes at $0.29 each; balance $5.00
+        // Base: 10 tomatoes = $2.90. Remaining $2.10.
+        // 2.10 / 29 = 7 more tomatoes (7 * 29 = 203). Total 17 tomatoes = $4.93, leftover $0.07
+        let tomato = item("Tomato", cents: 29, mandatoryQuantity: 10, quantityConstraint: .minimum)
+        let i = input(balance: 500, items: [tomato])
+        let result = optimizer.optimize(input: i)
+        XCTAssertNotNil(result)
+        let tomatoSelected = result?.selectedItems.first { $0.item.name == "Tomato" }
+        XCTAssertGreaterThanOrEqual(tomatoSelected?.quantity ?? 0, 10)
+        // Algorithm should add more if it helps: 500 / 29 = 17 remainder 7
+        XCTAssertEqual(tomatoSelected?.quantity, 17)
+        XCTAssertEqual(result?.matchQuality, .partial(remainingCents: 7))
+    }
+
+    func testMinimumConstraintRespectsBaseWhenNoRoomForExtras() {
+        // Balance exactly covers 5 items; no room for more
+        let item = item("Item", cents: 100, mandatoryQuantity: 5, quantityConstraint: .minimum)
+        let i = input(balance: 500, items: [item])
+        let result = optimizer.optimize(input: i)
+        XCTAssertNotNil(result)
+        let selected = result?.selectedItems.first
+        XCTAssertEqual(selected?.quantity, 5)
+        XCTAssertEqual(result?.matchQuality, .perfect)
+    }
+
+    func testExactVsMinimumBothWorkInSameInput() {
+        // Exactly 2 avocados, at least 3 tomatoes
+        let avocado = item("Avocado", cents: 400, mandatoryQuantity: 2, quantityConstraint: .exact)
+        let tomato = item("Tomato", cents: 50, mandatoryQuantity: 3, quantityConstraint: .minimum)
+        // Balance $10. Base: 2*400 + 3*50 = 950. Remaining 50. Can add 1 tomato.
+        let i = input(balance: 1000, items: [avocado, tomato])
+        let result = optimizer.optimize(input: i)
+        XCTAssertNotNil(result)
+        let avocadoSelected = result?.selectedItems.first { $0.item.name == "Avocado" }
+        let tomatoSelected = result?.selectedItems.first { $0.item.name == "Tomato" }
+        XCTAssertEqual(avocadoSelected?.quantity, 2)
+        XCTAssertGreaterThanOrEqual(tomatoSelected?.quantity ?? 0, 3)
+        XCTAssertEqual(tomatoSelected?.quantity, 4) // 3 base + 1 extra
     }
 }
