@@ -89,12 +89,24 @@ struct InputView: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
 
-            ForEach($vm.items) { $item in
-                ItemRowView(item: $item)
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.95).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+            ForEach(Array(vm.items.enumerated()), id: \.element.id) { index, _ in
+                ItemRowView(
+                    item: Binding(
+                        get: { index < vm.items.count ? vm.items[index] : ShoppingItem(name: "", priceInCents: 0) },
+                        set: { if index < vm.items.count { vm.items[index] = $0 } }
+                    ),
+                    isLastRow: index == vm.items.count - 1,
+                    onDelete: { vm.removeItem(at: IndexSet(integer: index)) },
+                    onPriceBecameNonZero: index == vm.items.count - 1 ? {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                            vm.addItem()
+                        }
+                    } : nil
+                )
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.95).combined(with: .opacity),
+                    removal: .opacity
+                ))
             }
 
             AddItemButton {
