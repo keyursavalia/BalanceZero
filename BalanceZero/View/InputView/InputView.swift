@@ -3,6 +3,7 @@ import SwiftData
 
 struct InputView: View {
     @EnvironmentObject private var vm: InputViewModel
+    @Environment(\.modelContext) private var modelContext
     @State private var showingSavedLists = false
     @Query(sort: \SavedItemList.createdAt, order: .reverse) private var savedLists: [SavedItemList]
 
@@ -50,6 +51,13 @@ struct InputView: View {
         .navigationDestination(item: $vm.result) { result in
             ReportView(vm: ReportViewModel(result: result))
                 .environmentObject(vm)
+        }
+        .onChange(of: vm.result) { _, newValue in
+            if let result = newValue {
+                let saved = SavedCalculation.from(result)
+                modelContext.insert(saved)
+                try? modelContext.save()
+            }
         }
         .alert("Check Your Input", isPresented: $vm.showValidationError) {
             Button("OK", role: .cancel) {}
