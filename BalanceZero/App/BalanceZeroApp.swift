@@ -7,12 +7,10 @@ struct BalanceZeroApp: App {
     
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                InputView()
-                    .environmentObject(inputVM)
-            }
+            MainTabView()
+                .environmentObject(inputVM)
             .tint(AppTheme.accent)
-            .modelContainer(for: [SavedItemList.self, SavedItem.self])
+            .modelContainer(for: [SavedItemList.self, SavedItem.self, SavedCalculation.self, SavedResultItem.self])
         }
     }
 }
