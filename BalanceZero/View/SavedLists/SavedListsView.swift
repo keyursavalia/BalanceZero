@@ -5,7 +5,8 @@ struct SavedListsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var inputVM: InputViewModel
     @Query(sort: \SavedItemList.createdAt, order: .reverse) private var lists: [SavedItemList]
-    @State private var isPresentingNewListSheet = false
+    @State private var isPresentingNewListAlert = false
+    @State private var newListName = ""
     @State private var newlyCreatedList: SavedItemList?
     @Binding var isPresented: Bool
 
@@ -47,20 +48,24 @@ struct SavedListsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    isPresentingNewListSheet = true
+                    newListName = ""
+                    isPresentingNewListAlert = true
                 } label: {
                     Image(systemName: "plus")
                         .foregroundStyle(AppTheme.accent)
                 }
             }
         }
-        .sheet(isPresented: $isPresentingNewListSheet) {
-            NavigationStack {
-                NewSavedListView { name in
-                    let list = createList(named: name)
+        .alert("New List", isPresented: $isPresentingNewListAlert) {
+            TextField("e.g. Grocery Staples", text: $newListName)
+            Button("Cancel", role: .cancel) { }
+            Button("Create") {
+                if let list = createList(named: newListName) {
                     newlyCreatedList = list
                 }
             }
+        } message: {
+            Text("Enter a name for your list")
         }
         .navigationDestination(item: $newlyCreatedList) { list in
             SavedListDetailView(list: list, isRootPresented: $isPresented)
@@ -85,34 +90,3 @@ struct SavedListsView: View {
         try? modelContext.save()
     }
 }
-
-struct NewSavedListView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var name: String = ""
-
-    let onCreate: (String) -> Void
-
-    var body: some View {
-        Form {
-            Section(header: Text("List Name")) {
-                TextField("e.g. Grocery Staples", text: $name)
-            }
-        }
-        .navigationTitle("New List")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Create") {
-                    onCreate(name)
-                    dismiss()
-                }
-                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-        }
-    }
-}
-
