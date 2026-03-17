@@ -17,8 +17,12 @@ struct SelectedItem: Equatable, Hashable {
 
 struct OptimizationResult: Equatable, Hashable {
     let balanceInCents: Int
+    /// Primary selected items combination (usually the first / default choice).
     let selectedItems: [SelectedItem]
     let matchQuality: MatchQuality
+    /// All optimal item combinations that achieve the same best spend (including the primary one).
+    /// This will contain at least one entry when `matchQuality` is not `.noSolution`.
+    let allSelections: [[SelectedItem]]
     
     var totalCentsSpent: Int {
         selectedItems.reduce(0) { $0 + $1.totalCents }
