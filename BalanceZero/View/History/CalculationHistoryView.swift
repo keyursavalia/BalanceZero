@@ -6,6 +6,7 @@ struct CalculationHistoryView: View {
     @EnvironmentObject private var inputVM: InputViewModel
     @Query(sort: \SavedCalculation.createdAt, order: .reverse) private var calculations: [SavedCalculation]
     @State private var selectedCalculation: SavedCalculation?
+    @State private var isShowingClearAlert = false
 
     var body: some View {
         NavigationStack {
@@ -33,9 +34,25 @@ struct CalculationHistoryView: View {
             }
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !calculations.isEmpty {
+                        Button("Clear") {
+                            isShowingClearAlert = true
+                        }
+                        .foregroundStyle(.red)
+                    }
+                }
+            }
             .navigationDestination(item: $selectedCalculation) { calc in
                 ReportView(vm: ReportViewModel(result: calc.optimizationResult))
                     .environmentObject(inputVM)
+            }
+            .alert("Clear history?", isPresented: $isShowingClearAlert) {
+                Button("Clear All", role: .destructive) {
+                    clearAllHistory()
+                }
+                Button("Cancel", role: .cancel) { }
             }
         }
     }
@@ -59,6 +76,13 @@ struct CalculationHistoryView: View {
     private func deleteCalculations(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(calculations[index])
+        }
+        try? modelContext.save()
+    }
+
+    private func clearAllHistory() {
+        for calculation in calculations {
+            modelContext.delete(calculation)
         }
         try? modelContext.save()
     }
