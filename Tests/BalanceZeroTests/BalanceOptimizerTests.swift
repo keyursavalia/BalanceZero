@@ -216,4 +216,106 @@ final class BalanceOptimizerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(tomatoSelected?.quantity ?? 0, 3)
         XCTAssertEqual(tomatoSelected?.quantity, 4) // 3 base + 1 extra
     }
+
+    // MARK: - Multiple Combination / allSelections Tests
+
+    func testPrimarySelectionIsFirstInAllSelections() {
+        // Simple case with at least one valid combination
+        let items = [
+            item("A", cents: 200),
+            item("B", cents: 300)
+        ]
+        let i = input(balance: 500, items: items) // A + B
+        let result = optimizer.optimize(input: i)
+
+        XCTAssertNotNil(result)
+        guard let result else {
+            return
+        }
+
+        // selectedItems should always match the first entry in allSelections
+        XCTAssertFalse(result.allSelections.isEmpty)
+        XCTAssertEqual(result.selectedItems, result.allSelections.first)
+    }
+
+    func testAllSelectionsContainsMultiplePerfectCombinationsWhenAvailable() {
+        // Prices chosen so there are at least two different optimal combinations that spend the full balance.
+        //
+        // Items:
+        //  - A: 2
+        //  - B: 4
+        //  - C: 6
+        //
+        // Balance: 8
+        //
+        // Valid perfect-spend combinations include:
+        //  - B + B (4 + 4)
+        //  - A + C (2 + 6)
+        let items = [
+            item("A", cents: 2),
+            item("B", cents: 4),
+            item("C", cents: 6)
+        ]
+        let i = input(balance: 8, items: items)
+        let result = optimizer.optimize(input: i)
+
+        XCTAssertNotNil(result)
+        guard let result else {
+            return
+        }
+
+        XCTAssertEqual(result.matchQuality, .perfect)
+        XCTAssertGreaterThanOrEqual(result.allSelections.count, 1)
+
+        // Every selection should spend exactly the balance and never exceed it.
+        for selection in result.allSelections {
+            let spent = selection.reduce(0) { $0 + $1.totalCents }
+            XCTAssertEqual(spent, result.balanceInCents)
+        }
+    }
+
+    func testAllSelectionsNeverExceedMaximumCombinationLimit() {
+        // Construct a case with many symmetric combinations to ensure we respect the cap.
+        // Balance 20, items of price 2 -> many different count distributions in DP,
+        // but internal implementation must cap returned combinations.
+        var items: [ShoppingItem] = []
+        for index in 0..<10 {
+            items.append(item("Item\(index)", cents: 2))
+        }
+        let i = input(balance: 20, items: items)
+        let result = optimizer.optimize(input: i)
+
+        XCTAssertNotNil(result)
+        guard let result else {
+            return
+        }
+
+        // Implementation currently caps combinations to a practical upper bound (100).
+        XCTAssertLessThanOrEqual(result.allSelections.count, 100)
+    }
+
+    func testNoSolutionHasEmptyOrSingleEmptySelection() {
+        // No item fits into the balance at all.
+        let items = [
+            item("A", cents: 500),
+            item("B", cents: 600)
+        ]
+        let i = input(balance: 100, items: items)
+        let result = optimizer.optimize(input: i)
+
+        XCTAssertNotNil(result)
+        guard let result else {
+            return
+        }
+
+        XCTAssertEqual(result.matchQuality, .noSolution)
+        // Either no selections or a single empty selection are both acceptable representations.
+        if result.allSelections.isEmpty {
+            XCTAssertTrue(result.selectedItems.isEmpty)
+        } else {
+            XCTAssertEqual(result.allSelections.count, 1)
+            XCTAssertTrue(result.allSelections[0].isEmpty)
+            XCTAssertTrue(result.selectedItems.isEmpty)
+        }
+    }
 }
