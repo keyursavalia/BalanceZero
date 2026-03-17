@@ -70,13 +70,45 @@ struct ReportView: View {
                 }
             }
 
-            if vm.result.selectedItems.isEmpty {
+            if vm.hasMultipleCombinations {
+                HStack(spacing: 16) {
+                    Button {
+                        if vm.selectedComboIndex > 0 {
+                            vm.selectedComboIndex -= 1
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(vm.selectedComboIndex > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                            .padding(8)
+                    }
+                    .disabled(vm.selectedComboIndex == 0)
+
+                    Text(vm.combinationSelectorTitle)
+                        .font(AppTheme.bodyFont(size: 13))
+                        .foregroundStyle(AppTheme.textSecondary)
+
+                    Button {
+                        if vm.selectedComboIndex < vm.result.allSelections.count - 1 {
+                            vm.selectedComboIndex += 1
+                        }
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(vm.selectedComboIndex < vm.result.allSelections.count - 1 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                            .padding(8)
+                    }
+                    .disabled(vm.selectedComboIndex >= vm.result.allSelections.count - 1)
+                }
+            }
+
+            if vm.currentItems.isEmpty {
                 Text("No items could be selected within your balance.")
                     .font(AppTheme.bodyFont(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                ForEach(vm.result.selectedItems, id: \.item.id) { selected in
+                ForEach(vm.currentItems, id: \.item.id) { selected in
                     ResultItemRowView(selected: selected)
                 }
             }
