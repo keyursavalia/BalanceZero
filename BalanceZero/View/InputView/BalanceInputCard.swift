@@ -9,7 +9,7 @@ struct BalanceInputCard: View {
     private var hasValue: Bool { !balanceText.isEmpty }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("CARD BALANCE")
                 .font(.system(size: 12, weight: .semibold))
                 .tracking(1.5)
@@ -32,7 +32,7 @@ struct BalanceInputCard: View {
                     }
             }
         }
-        .padding(24)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
         .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 4)
