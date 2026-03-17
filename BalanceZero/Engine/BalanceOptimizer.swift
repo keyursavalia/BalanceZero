@@ -12,6 +12,7 @@ import Foundation
 struct BalanceOptimizer {
     
     static let maximumSupportedCents: Int = 99_999
+    private static let maxCombinationCount: Int = 100
     
     struct Input {
         let balanceInCents: Int
@@ -44,7 +45,8 @@ struct BalanceOptimizer {
             return OptimizationResult(
                 balanceInCents: input.balanceInCents,
                 selectedItems: [],
-                matchQuality: .noSolution)
+                matchQuality: .noSolution,
+                allSelections: [])
         }
 
         let remainingBalance = balance - mandatoryTotal
@@ -58,33 +60,32 @@ struct BalanceOptimizer {
         }
         let validItems = optionalItems.filter { $0.priceInCents > 0 && $0.priceInCents <= remainingBalance }
         
-        var optionalSelected: [SelectedItem] = []
         var optionalTotal = 0
-
+        var allOptionalSelections: [[SelectedItem]] = [[]]
+        
         if !validItems.isEmpty && remainingBalance > 0 {
-            let (amount, items) = runDPAndReconstruct(capacity: remainingBalance, validItems: validItems)
+            let (amount, selections) = runDPAllOptimalSelections(
+                capacity: remainingBalance,
+                validItems: validItems,
+                maxCombinations: BalanceOptimizer.maxCombinationCount
+            )
             optionalTotal = amount
-            optionalSelected = items
+            if !selections.isEmpty {
+                allOptionalSelections = selections
+            }
         }
-
-        // Merge minimum-base items with optional extras (same item may appear in both)
-        var mergedByItem: [UUID: (item: ShoppingItem, quantity: Int)] = [:]
-        for sel in exactItems {
-            mergedByItem[sel.item.id] = (sel.item, sel.quantity)
+        
+        // Merge minimum-base items with each optional selection (same item may appear in both)
+        let mergedSelections: [[SelectedItem]] = allOptionalSelections.map { optionalSelection in
+            mergeSelections(
+                exactItems: exactItems,
+                minimumBaseItems: minimumBaseItems,
+                optionalItems: optionalSelection
+            )
         }
-        for sel in minimumBaseItems {
-            let existing = mergedByItem[sel.item.id]
-            let qty = (existing?.quantity ?? 0) + sel.quantity
-            mergedByItem[sel.item.id] = (sel.item, qty)
-        }
-        for sel in optionalSelected {
-            let existing = mergedByItem[sel.item.id]
-            let qty = (existing?.quantity ?? 0) + sel.quantity
-            mergedByItem[sel.item.id] = (sel.item, qty)
-        }
-        let mergedItems = mergedByItem.values.map { SelectedItem(item: $0.item, quantity: $0.quantity) }
-
-        let allSelected = mergedItems.sorted { $0.totalCents > $1.totalCents }
+        
+        let primarySelection = mergedSelections.first ?? []
+        let allSelected = primarySelection.sorted { $0.totalCents > $1.totalCents }
         let totalSpent = mandatoryTotal + optionalTotal
         let leftover = balance - totalSpent
         let quality: MatchQuality = leftover == 0 ? .perfect : (mandatoryTotal > 0 || totalSpent > 0 ? .partial(remainingCents: leftover) : .noSolution)
@@ -92,14 +93,24 @@ struct BalanceOptimizer {
         return OptimizationResult(
             balanceInCents: input.balanceInCents,
             selectedItems: allSelected,
-            matchQuality: quality)
+            matchQuality: quality,
+            allSelections: mergedSelections)
     }
-
-    private func runDPAndReconstruct(capacity: Int, validItems: [ShoppingItem]) -> (Int, [SelectedItem]) {
+    
+    private struct Choice {
+        let itemIndex: Int
+        let previousCapacity: Int
+    }
+    
+    private func runDPAllOptimalSelections(
+        capacity: Int,
+        validItems: [ShoppingItem],
+        maxCombinations: Int
+    ) -> (Int, [[SelectedItem]]) {
         var dp = [Int](repeating: -1, count: capacity + 1)
         dp[0] = 0
-        var itemUsed = [Int](repeating: -1, count: capacity + 1)
-
+        var predecessors = Array(repeating: [Choice](), count: capacity + 1)
+        
         for c in 1...capacity {
             for (index, item) in validItems.enumerated() {
                 let price = item.priceInCents
@@ -109,11 +120,13 @@ struct BalanceOptimizer {
                 let candidate = price + prev
                 if candidate > dp[c] {
                     dp[c] = candidate
-                    itemUsed[c] = index
+                    predecessors[c] = [Choice(itemIndex: index, previousCapacity: c - price)]
+                } else if candidate == dp[c] && candidate >= 0 {
+                    predecessors[c].append(Choice(itemIndex: index, previousCapacity: c - price))
                 }
             }
         }
-
+        
         var bestAmount = 0
         for c in stride(from: capacity, through: 0, by: -1) {
             if dp[c] >= 0 {
@@ -121,16 +134,63 @@ struct BalanceOptimizer {
                 break
             }
         }
-
-        var selected: [Int: Int] = [:]
-        var remaining = bestAmount
-        while remaining > 0 {
-            let idx = itemUsed[remaining]
-            guard idx >= 0 else { break }
-            selected[idx, default: 0] += 1
-            remaining -= validItems[idx].priceInCents
+        
+        guard bestAmount > 0 else {
+            return (0, [[]])
         }
-        let items = selected.map { idx, qty in SelectedItem(item: validItems[idx], quantity: qty) }
-        return (bestAmount, items)
+        
+        var results: [[SelectedItem]] = []
+        var counts = [Int](repeating: 0, count: validItems.count)
+        
+        func dfs(_ c: Int) {
+            if results.count >= maxCombinations { return }
+            if c == 0 {
+                let selection: [SelectedItem] = counts.enumerated().compactMap { index, qty in
+                    qty > 0 ? SelectedItem(item: validItems[index], quantity: qty) : nil
+                }
+                results.append(selection)
+                return
+            }
+            
+            for choice in predecessors[c] {
+                counts[choice.itemIndex] += 1
+                dfs(choice.previousCapacity)
+                counts[choice.itemIndex] -= 1
+            }
+        }
+        
+        dfs(bestAmount)
+        
+        return (bestAmount, results)
+    }
+    
+    private func mergeSelections(
+        exactItems: [SelectedItem],
+        minimumBaseItems: [SelectedItem],
+        optionalItems: [SelectedItem]
+    ) -> [SelectedItem] {
+        var mergedByItem: [UUID: (item: ShoppingItem, quantity: Int)] = [:]
+        
+        for sel in exactItems {
+            let existing = mergedByItem[sel.item.id]
+            let qty = (existing?.quantity ?? 0) + sel.quantity
+            mergedByItem[sel.item.id] = (sel.item, qty)
+        }
+        
+        for sel in minimumBaseItems {
+            let existing = mergedByItem[sel.item.id]
+            let qty = (existing?.quantity ?? 0) + sel.quantity
+            mergedByItem[sel.item.id] = (sel.item, qty)
+        }
+        
+        for sel in optionalItems {
+            let existing = mergedByItem[sel.item.id]
+            let qty = (existing?.quantity ?? 0) + sel.quantity
+            mergedByItem[sel.item.id] = (sel.item, qty)
+        }
+        
+        return mergedByItem.values
+            .map { SelectedItem(item: $0.item, quantity: $0.quantity) }
+            .sorted { $0.totalCents > $1.totalCents }
     }
 }
