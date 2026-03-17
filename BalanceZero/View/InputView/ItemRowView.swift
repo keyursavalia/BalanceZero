@@ -22,66 +22,48 @@ struct ItemRowView: View {
                     .buttonStyle(.plain)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Item Name")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(AppTheme.textSecondary)
-
-                    TextField("New Item...", text: $item.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .focused($nameFocused)
-                        .submitLabel(.next)
-                        .onSubmit { }
-                }
+                TextField("New Item...", text: $item.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .focused($nameFocused)
+                    .submitLabel(.next)
+                    .onSubmit { }
 
                 Spacer()
 
-                VStack(alignment: .center, spacing: 4) {
-                    Text("Qty")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(AppTheme.textSecondary)
-
-                    HStack(spacing: 6) {
-                        Button {
-                            if item.mandatoryQuantity > 0 {
-                                item.mandatoryQuantity -= 1
-                            }
-                        } label: {
-                            Image(systemName: "minus.circle.fill")
-                                .font(.system(size: 22))
-                                .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
+                HStack(spacing: 6) {
+                    Button {
+                        if item.mandatoryQuantity > 0 {
+                            item.mandatoryQuantity -= 1
                         }
-                        .buttonStyle(.plain)
-
-                        Text("\(item.mandatoryQuantity)")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(AppTheme.textPrimary)
-                            .frame(minWidth: 24, alignment: .center)
-
-                        Button {
-                            item.mandatoryQuantity += 1
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 22))
-                                .foregroundStyle(AppTheme.accent)
-                        }
-                        .buttonStyle(.plain)
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
                     }
-                    .padding(.horizontal, 4)
-                }
+                    .buttonStyle(.plain)
 
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Price")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(AppTheme.textSecondary)
+                    Text("\(item.mandatoryQuantity)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .frame(minWidth: 24, alignment: .center)
 
-                    CurrencyPriceField(priceInCents: $item.priceInCents)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Button {
+                        item.mandatoryQuantity += 1
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 4)
+
+                CurrencyPriceField(priceInCents: $item.priceInCents)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 .frame(width: 76, alignment: .trailing)
             }
-            .padding(20)
+            .padding(16)
 
             // Subtle quantity-constraint hint when user has set a quantity
             if item.mandatoryQuantity > 0 {
@@ -111,8 +93,8 @@ struct ItemRowView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
-        .padding(.top, 4)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .padding(.top, 2)
     }
 }
