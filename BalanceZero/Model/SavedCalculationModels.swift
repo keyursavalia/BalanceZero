@@ -7,6 +7,9 @@ final class SavedCalculation {
     var matchQualityKind: String // "perfect" | "partial" | "noSolution"
     var matchQualityRemainingCents: Int // only used when kind == "partial"
     var createdAt: Date
+    /// JSON-encoded list of all optimal selections (each selection is an array of items).
+    /// Stored to allow history to preserve and browse all combinations.
+    var allSelectionsData: Data?
     @Relationship(deleteRule: .cascade, inverse: \SavedResultItem.calculation)
     var items: [SavedResultItem] = []
 
@@ -14,11 +17,13 @@ final class SavedCalculation {
         balanceInCents: Int,
         matchQualityKind: String,
         matchQualityRemainingCents: Int = 0,
+        allSelectionsData: Data? = nil,
         createdAt: Date = .now
     ) {
         self.balanceInCents = balanceInCents
         self.matchQualityKind = matchQualityKind
         self.matchQualityRemainingCents = matchQualityRemainingCents
+        self.allSelectionsData = allSelectionsData
         self.createdAt = createdAt
     }
 
@@ -39,19 +44,40 @@ final class SavedCalculation {
             )
             return SelectedItem(item: item, quantity: sel.quantity)
         }
+        
+        let decodedSelections = Self.decodeAllSelections(allSelectionsData)
+        let allSelections: [[SelectedItem]]
+        if !decodedSelections.isEmpty {
+            allSelections = decodedSelections.map { selection in
+                selection.map { payload in
+                    let item = ShoppingItem(
+                        name: payload.name,
+                        priceInCents: payload.priceInCents,
+                        mandatoryQuantity: 0
+                    )
+                    return SelectedItem(item: item, quantity: payload.quantity)
+                }
+            }
+        } else {
+            allSelections = [selectedItems]
+        }
+        
         return OptimizationResult(
             balanceInCents: balanceInCents,
             selectedItems: selectedItems,
-            matchQuality: matchQuality
+            matchQuality: matchQuality,
+            allSelections: allSelections
         )
     }
 
     static func from(_ result: OptimizationResult) -> SavedCalculation {
         let (kind, remaining) = matchQualityToStorage(result.matchQuality)
+        let encodedAllSelections = encodeAllSelections(result.allSelections)
         let saved = SavedCalculation(
             balanceInCents: result.balanceInCents,
             matchQualityKind: kind,
-            matchQualityRemainingCents: remaining
+            matchQualityRemainingCents: remaining,
+            allSelectionsData: encodedAllSelections
         )
         saved.items = result.selectedItems.map { sel in
             SavedResultItem(
@@ -62,6 +88,30 @@ final class SavedCalculation {
             )
         }
         return saved
+    }
+    
+    private struct SelectionItemPayload: Codable, Hashable {
+        let name: String
+        let priceInCents: Int
+        let quantity: Int
+    }
+    
+    private static func encodeAllSelections(_ selections: [[SelectedItem]]) -> Data? {
+        let payload: [[SelectionItemPayload]] = selections.map { selection in
+            selection.map { sel in
+                SelectionItemPayload(
+                    name: sel.item.name,
+                    priceInCents: sel.item.priceInCents,
+                    quantity: sel.quantity
+                )
+            }
+        }
+        return try? JSONEncoder().encode(payload)
+    }
+    
+    private static func decodeAllSelections(_ data: Data?) -> [[SelectionItemPayload]] {
+        guard let data else { return [] }
+        return (try? JSONDecoder().decode([[SelectionItemPayload]].self, from: data)) ?? []
     }
 
     private static func matchQualityToStorage(_ q: MatchQuality) -> (String, Int) {
