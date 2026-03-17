@@ -13,7 +13,7 @@ struct AddItemButton: View {
             }
             .foregroundStyle(AppTheme.textSecondary)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
+            .padding(.vertical, 14)
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
                     .strokeBorder(
