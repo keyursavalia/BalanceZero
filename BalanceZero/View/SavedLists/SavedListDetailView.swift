@@ -10,6 +10,9 @@ struct SavedListDetailView: View {
 
     @State private var draftItems: [DraftItem] = [DraftItem()]
     @State private var showNameRequiredAlert = false
+    @State private var isEditingItems = false
+    @State private var isRenamingList = false
+    @State private var draftListName: String = ""
 
     struct DraftItem: Identifiable {
         let id = UUID()
@@ -22,51 +25,94 @@ struct SavedListDetailView: View {
             AppTheme.background.ignoresSafeArea()
 
             Form {
-                Section(header: Text("List Name").font(.headline)) {
-                    TextField("Name", text: $list.name)
-                        .font(.system(size: 17, weight: .semibold))
-                }
-
                 Section(header: Text("Items").font(.headline)) {
-                    ForEach(list.items) { item in
-                        HStack {
-                            TextField("Item name", text: binding(for: item, keyPath: \.name))
-                            CurrencyPriceField(priceInCents: bindingForPriceInCents(of: item))
+                    if list.items.isEmpty && !isEditingItems {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("No items yet")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(AppTheme.textPrimary)
+
+                            Text("Add a few items you often buy so you can quickly reuse this list.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(AppTheme.textSecondary)
+
                             Button {
-                                deleteItem(item)
+                                isEditingItems = true
                             } label: {
-                                Image(systemName: "trash")
-                                    .foregroundStyle(.red)
-                                    .font(.system(size: 14))
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundStyle(AppTheme.accent)
+                                    Text("Add first item")
+                                        .foregroundStyle(AppTheme.accent)
+                                }
+                                .padding(.vertical, 8)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                .fill(AppTheme.cardBackground)
+                        )
+                    } else {
+                        ForEach(list.items) { item in
+                            HStack {
+                                TextField("Item name", text: binding(for: item, keyPath: \.name))
+                                CurrencyPriceField(priceInCents: bindingForPriceInCents(of: item))
+                                Button {
+                                    deleteItem(item)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(.red)
+                                        .font(.system(size: 14))
+                                }
                             }
                         }
-                    }
-                    .onDelete(perform: deleteItems)
+                        .onDelete(perform: deleteItems)
 
-                    ForEach($draftItems) { $draft in
-                        HStack {
-                            TextField("New item name", text: $draft.name)
-                            CurrencyPriceField(priceInCents: $draft.priceInCents)
+                        ForEach($draftItems) { $draft in
+                            HStack {
+                                TextField("New item name", text: $draft.name)
+                                CurrencyPriceField(priceInCents: $draft.priceInCents)
+                            }
                         }
-                    }
 
-                    Button {
-                        saveAllValidDrafts()
-                        addNewDraftRow()
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(AppTheme.accent)
-                            Text("Add Item Row")
-                                .foregroundStyle(AppTheme.accent)
+                        Button {
+                            saveAllValidDrafts()
+                            addNewDraftRow()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle")
+                                    .font(.system(size: 16, weight: .regular))
+                                    .foregroundStyle(AppTheme.accent)
+                                Text("Add Item Row")
+                                    .foregroundStyle(AppTheme.accent)
+                            }
                         }
                     }
                 }
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle(list.name.isEmpty ? "List" : list.name)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 6) {
+                    Button {
+                        draftListName = list.name
+                        isRenamingList = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(list.name.isEmpty ? "List" : list.name)
+                                .font(.headline)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Use List") {
                     applyToInput()
@@ -79,6 +125,9 @@ struct SavedListDetailView: View {
             // Ensure at least one draft row exists when view appears
             if draftItems.isEmpty {
                 draftItems.append(DraftItem())
+            }
+            if !list.items.isEmpty {
+                isEditingItems = true
             }
         }
         .onDisappear {
@@ -99,11 +148,22 @@ struct SavedListDetailView: View {
 
             try? modelContext.save()
         }
-        .alert("List Name Required", isPresented: $showNameRequiredAlert) {
+        .alert("Rename List", isPresented: $isRenamingList, actions: {
+            TextField("List name", text: $draftListName)
+            Button("Cancel") {}
+                .foregroundStyle(.red)
+            Button("Save") {
+                let trimmed = draftListName.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    list.name = trimmed
+                }
+            }
+        })
+        .alert("List Name Required", isPresented: $showNameRequiredAlert, actions: {
             Button("OK", role: .cancel) {}
-        } message: {
+        }, message: {
             Text("Please provide a name for this list before saving.")
-        }
+        })
     }
 
     private func saveAllValidDrafts() {
@@ -111,12 +171,13 @@ struct SavedListDetailView: View {
 
         for draft in draftItems {
             let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmedName.isEmpty else { continue }
-            guard draft.priceInCents > 0 else { continue }
+            guard draft.priceInCents > 0 || !trimmedName.isEmpty else { continue }
+
+            let finalName = trimmedName.isEmpty ? "Unnamed item" : trimmedName
 
             // Check if not already in list
-            if !list.items.contains(where: { $0.name == trimmedName && $0.priceInCents == draft.priceInCents }) {
-                let item = SavedItem(name: trimmedName, priceInCents: draft.priceInCents, list: list)
+            if !list.items.contains(where: { $0.name == finalName && $0.priceInCents == draft.priceInCents }) {
+                let item = SavedItem(name: finalName, priceInCents: draft.priceInCents, list: list)
                 list.items.append(item)
                 savedDraftIds.append(draft.id)
             }
