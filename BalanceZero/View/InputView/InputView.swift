@@ -12,7 +12,7 @@ struct InputView: View {
             AppTheme.background.ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
                     BalanceInputCard(
                         balanceText: $vm.balanceText,
                         balanceInCents: vm.balanceInCents
@@ -21,10 +21,10 @@ struct InputView: View {
                     itemsSection
 
                     // Spacer so content clears the pinned bottom bar
-                    Color.clear.frame(height: 100)
+                    Color.clear.frame(height: 72)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
             }
 
             bottomBar
@@ -69,7 +69,7 @@ struct InputView: View {
     // Items Section
 
     private var itemsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             HStack {
                 Text("Items to Buy")
                     .font(AppTheme.titleFont())
@@ -129,7 +129,6 @@ struct InputView: View {
 
     private var bottomBar: some View {
         VStack(spacing: 0) {
-            Divider().opacity(0)
             Button {
                 vm.calculate()
             } label: {
@@ -145,8 +144,7 @@ struct InputView: View {
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-//                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
+                .padding(.vertical, 14)
                 .background(
                     vm.canCalculate ? AppTheme.accent : AppTheme.accent.opacity(0.4),
                     in: Capsule()
@@ -154,8 +152,8 @@ struct InputView: View {
             }
             .disabled(!vm.canCalculate || vm.isCalculating)
             .animation(.easeInOut(duration: 0.2), value: vm.canCalculate)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .background(.ultraThinMaterial)
         }
     }
