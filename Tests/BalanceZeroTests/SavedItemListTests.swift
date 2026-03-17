@@ -73,5 +73,44 @@ final class SavedItemListTests: XCTestCase {
 
         XCTAssertEqual(fetched.first?.items.first?.priceInCents, 150)
     }
+
+    @MainActor func testCreateEmptyListPersistsWithoutItems() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let list = SavedItemList(name: "Empty List")
+        context.insert(list)
+        try context.save()
+
+        let descriptor = FetchDescriptor<SavedItemList>()
+        let fetched = try context.fetch(descriptor)
+
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertTrue(fetched.first?.items.isEmpty ?? false)
+    }
+
+    @MainActor func testItemsMaintainBackReferenceToListAfterFetch() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let list = SavedItemList(name: "Backref Test")
+        let item = SavedItem(name: "Water", priceInCents: 199, list: list)
+        list.items.append(item)
+
+        context.insert(list)
+        try context.save()
+
+        let descriptor = FetchDescriptor<SavedItemList>()
+        let fetchedLists = try context.fetch(descriptor)
+
+        XCTAssertEqual(fetchedLists.count, 1)
+        let fetchedList = fetchedLists[0]
+        XCTAssertEqual(fetchedList.items.count, 1)
+        let fetchedItem = fetchedList.items[0]
+
+        // Ensure the relationship back to the parent list is intact.
+        XCTAssertNotNil(fetchedItem.list)
+        XCTAssertIdentical(fetchedItem.list, fetchedList)
+    }
 }
 
