@@ -7,20 +7,21 @@ struct AddItemButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle")
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: 17, weight: .medium))
                 Text("Add another item")
-                    .font(.system(size: 15, weight: .regular))
+                    .font(.system(size: 15, weight: .medium))
             }
-            .foregroundStyle(AppTheme.textSecondary)
+            .foregroundStyle(AppTheme.outline)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 16)
             .overlay(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous)
                     .strokeBorder(
-                        AppTheme.textSecondary.opacity(0.35),
-                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+                        AppTheme.outlineVariant,
+                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])
                     )
             )
         }
+        .buttonStyle(.plain)
     }
 }
