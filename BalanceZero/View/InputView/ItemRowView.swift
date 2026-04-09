@@ -10,68 +10,49 @@ struct ItemRowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
+                // Delete button — only shown when item has a price
                 if item.priceInCents > 0 {
-                    Button {
-                        onDelete()
-                    } label: {
+                    Button(action: onDelete) {
                         Image(systemName: "trash")
-                            .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppTheme.outline)
+                            .frame(width: 36, height: 36)
+                            .background(AppTheme.surfaceHigh, in: Circle())
                     }
                     .buttonStyle(.plain)
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
                 }
 
-                TextField("New Item...", text: $item.name)
+                // Name field
+                TextField("New item...", text: $item.name)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
+                    .foregroundStyle(AppTheme.onSurface)
                     .focused($nameFocused)
                     .submitLabel(.next)
-                    .onSubmit { }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                HStack(spacing: 6) {
-                    Button {
-                        if item.mandatoryQuantity > 0 {
-                            item.mandatoryQuantity -= 1
-                        }
-                    } label: {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("\(item.mandatoryQuantity)")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .frame(minWidth: 24, alignment: .center)
-
-                    Button {
-                        item.mandatoryQuantity += 1
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 4)
-
+                // Price field — right-aligned pill
                 CurrencyPriceField(priceInCents: $item.priceInCents)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                .frame(width: 76, alignment: .trailing)
-            }
-            .padding(16)
+                    .frame(width: 78, alignment: .trailing)
 
-            // Subtle quantity-constraint hint when user has set a quantity
+                // Quantity stepper pill
+                quantityStepper
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: item.priceInCents > 0)
+
+            // Constraint picker — slides in when a quantity is set
             if item.mandatoryQuantity > 0 {
-                quantityConstraintHint
+                constraintPicker
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 3)
+        .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .shadow(color: AppTheme.onSurface.opacity(0.05), radius: 8, x: 0, y: 3)
+        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: item.mandatoryQuantity > 0)
         .onChange(of: item.priceInCents) { oldValue, newValue in
             if oldValue == 0 && newValue > 0, isLastRow {
                 onPriceBecameNonZero?()
@@ -79,14 +60,57 @@ struct ItemRowView: View {
         }
     }
 
-    @ViewBuilder
-    private var quantityConstraintHint: some View {
+    // MARK: - Quantity Stepper
+
+    private var quantityStepper: some View {
+        HStack(spacing: 0) {
+            Button {
+                if item.mandatoryQuantity > 0 {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                        item.mandatoryQuantity -= 1
+                    }
+                }
+            } label: {
+                Image(systemName: "minus")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(item.mandatoryQuantity > 0 ? AppTheme.onSurface : AppTheme.outlineVariant)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
+            .disabled(item.mandatoryQuantity == 0)
+
+            Text("\(item.mandatoryQuantity)")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(AppTheme.onSurface)
+                .frame(minWidth: 22, alignment: .center)
+                .contentTransition(.numericText())
+                .animation(.spring(response: 0.25), value: item.mandatoryQuantity)
+
+            Button {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                    item.mandatoryQuantity += 1
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppTheme.primary)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
+        }
+        .background(AppTheme.surfaceHigh, in: Capsule())
+    }
+
+    // MARK: - Constraint Picker
+
+    private var constraintPicker: some View {
         HStack(spacing: 8) {
             Text("Include:")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundStyle(AppTheme.textSecondary)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(AppTheme.outline)
+                .tracking(0.5)
 
-            Picker("Quantity constraint", selection: $item.quantityConstraint) {
+            Picker("Constraint", selection: $item.quantityConstraint) {
                 Text("Exactly \(item.mandatoryQuantity)").tag(QuantityConstraint.exact)
                 Text("At least \(item.mandatoryQuantity)").tag(QuantityConstraint.minimum)
             }
@@ -94,7 +118,7 @@ struct ItemRowView: View {
             .labelsHidden()
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, 12)
-        .padding(.top, 2)
+        .padding(.bottom, 14)
+        .padding(.top, 4)
     }
 }
