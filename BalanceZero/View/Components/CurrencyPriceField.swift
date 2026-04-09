@@ -96,7 +96,13 @@ private struct TrailingCursorTextField: UIViewRepresentable {
                        shouldChangeCharactersIn range: NSRange,
                        replacementString string: String) -> Bool {
             let current = textField.text ?? ""
-            let updated = (current as NSString).replacingCharacters(in: range, with: string)
+            // Ignore cursor position — always append or drop from the right end.
+            let updated: String
+            if string.isEmpty {
+                updated = current.isEmpty ? "" : String(current.dropLast())
+            } else {
+                updated = current + string
+            }
             parent.onTextChanged(updated)
             return false
         }
