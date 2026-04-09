@@ -4,6 +4,7 @@ struct ReportView: View {
     @EnvironmentObject private var inputVM: InputViewModel
     @ObservedObject var vm: ReportViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -12,136 +13,193 @@ struct ReportView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     ReportHeaderView(vm: vm)
+                        .padding(.top, 8)
 
-                    statCards
+                    statGrid
 
-                    bestCombinationSection
+                    combinationSection
 
-                    summaryBanner
+                    infoCard
 
                     Color.clear.frame(height: 100)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
+                .frame(maxWidth: .infinity)
             }
 
             startOverBar
         }
-        .navigationTitle("Optimization Report")
+        .navigationTitle("Report")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(false)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    // Share sheet — placeholder for MVP
+                    // Share — placeholder for post-MVP
                 } label: {
                     Image(systemName: "square.and.arrow.up")
-                        .foregroundStyle(AppTheme.textSecondary)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.primary)
+                        .frame(width: 36, height: 36)
+                        .background(AppTheme.primaryFixed, in: Circle())
                 }
             }
         }
     }
 
-    // MARK: - Stat Cards
+    // MARK: - Stat Grid
 
-    private var statCards: some View {
+    private var statGrid: some View {
         HStack(spacing: 12) {
             StatCardView(label: "Original Balance", value: vm.originalBalanceForDisplay)
             StatCardView(label: "Total Spent", value: vm.totalSpentForDisplay)
         }
     }
 
-    // MARK: - Best Combination
+    // MARK: - Best Combination Section
 
-    private var bestCombinationSection: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Best Combination")
-                    .font(AppTheme.titleFont())
-                    .foregroundStyle(AppTheme.textPrimary)
+    private var combinationSection: some View {
+        VStack(spacing: 14) {
+            // Section header + match badge + navigator
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Best Combination")
+                        .font(AppTheme.headlineFont(size: 20))
+                        .foregroundStyle(AppTheme.onSurface)
+
+                    // Match quality badge
+                    matchQualityBadge
+                }
+
                 Spacer()
-                if vm.isPerfectMatch {
-                    Text(vm.matchLabel)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.accentGreen)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(AppTheme.accentGreenLight, in: Capsule())
+
+                // Combination navigator (shown only when multiple combos exist)
+                if vm.hasMultipleCombinations {
+                    comboNavigator
                 }
             }
 
-            if vm.hasMultipleCombinations {
-                HStack(spacing: 16) {
-                    Button {
-                        if vm.selectedComboIndex > 0 {
-                            vm.selectedComboIndex -= 1
-                        }
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(vm.selectedComboIndex > 0 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
-                            .padding(8)
-                    }
-                    .disabled(vm.selectedComboIndex == 0)
-
-                    Text(vm.combinationSelectorTitle)
-                        .font(AppTheme.bodyFont(size: 13))
-                        .foregroundStyle(AppTheme.textSecondary)
-
-                    Button {
-                        if vm.selectedComboIndex < vm.result.allSelections.count - 1 {
-                            vm.selectedComboIndex += 1
-                        }
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(vm.selectedComboIndex < vm.result.allSelections.count - 1 ? AppTheme.accent : AppTheme.textSecondary.opacity(0.4))
-                            .padding(8)
-                    }
-                    .disabled(vm.selectedComboIndex >= vm.result.allSelections.count - 1)
-                }
-            }
-
+            // Items list or empty state
             if vm.currentItems.isEmpty {
-                Text("No items could be selected within your balance.")
-                    .font(AppTheme.bodyFont(size: 14))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                emptyItemsCard
             } else {
-                ForEach(vm.currentItems, id: \.item.id) { selected in
-                    ResultItemRowView(selected: selected)
+                VStack(spacing: 8) {
+                    ForEach(vm.currentItems, id: \.item.id) { selected in
+                        ResultItemRowView(selected: selected)
+                    }
                 }
             }
         }
     }
 
-    // MARK: - Summary Banner
+    @ViewBuilder
+    private var matchQualityBadge: some View {
+        switch vm.result.matchQuality {
+        case .perfect:
+            Text("Perfect Match")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.5)
+                .foregroundStyle(AppTheme.successGreen)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(AppTheme.successGreenBg, in: Capsule())
 
-    private var summaryBanner: some View {
+        case .partial:
+            Text("Best Possible")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.5)
+                .foregroundStyle(AppTheme.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(AppTheme.primaryFixed, in: Capsule())
+
+        case .noSolution:
+            Text("No Solution")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.5)
+                .foregroundStyle(AppTheme.outline)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(AppTheme.surfaceHigh, in: Capsule())
+        }
+    }
+
+    private var comboNavigator: some View {
+        HStack(spacing: 0) {
+            Button {
+                if vm.selectedComboIndex > 0 {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                        vm.selectedComboIndex -= 1
+                    }
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(vm.selectedComboIndex > 0 ? AppTheme.primary : AppTheme.outlineVariant)
+                    .frame(width: 32, height: 32)
+            }
+            .disabled(vm.selectedComboIndex == 0)
+
+            Text(vm.combinationSelectorTitle)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppTheme.onSurfaceVariant)
+                .frame(minWidth: 80, alignment: .center)
+
+            Button {
+                if vm.selectedComboIndex < vm.result.allSelections.count - 1 {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                        vm.selectedComboIndex += 1
+                    }
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(vm.selectedComboIndex < vm.result.allSelections.count - 1 ? AppTheme.primary : AppTheme.outlineVariant)
+                    .frame(width: 32, height: 32)
+            }
+            .disabled(vm.selectedComboIndex >= vm.result.allSelections.count - 1)
+        }
+        .background(AppTheme.surfaceContainer, in: Capsule())
+    }
+
+    private var emptyItemsCard: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(AppTheme.primaryFixed.opacity(0.4))
+                    .frame(width: 72, height: 72)
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 28))
+                    .foregroundStyle(AppTheme.primary)
+            }
+            Text("No items could be selected within your balance.")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(AppTheme.onSurfaceVariant)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 240)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(40)
+        .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous))
+        .shadow(color: AppTheme.onSurface.opacity(0.04), radius: 8, x: 0, y: 3)
+    }
+
+    // MARK: - Info / Summary Card
+
+    private var infoCard: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "info.circle.fill")
-                .foregroundStyle(AppTheme.accent)
                 .font(.system(size: 18))
+                .foregroundStyle(AppTheme.primary)
 
-            Text(attributedSummary)
-                .font(AppTheme.bodyFont(size: 14))
-                .foregroundStyle(AppTheme.textSecondary)
-                .multilineTextAlignment(.leading)
+            Text(vm.summaryMessage)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(AppTheme.onSurfaceVariant)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 3)
-    }
-
-    private var attributedSummary: AttributedString {
-        var base = AttributedString(vm.summaryMessage)
-        // Bold and color the dollar amount in the summary
-        if let range = base.range(of: "$0.00") {
-            base[range].foregroundColor = AppTheme.accent
-            base[range].font = .system(size: 14, weight: .semibold)
-        }
-        return base
+        .padding(18)
+        .background(AppTheme.primaryFixed.opacity(0.45), in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
     }
 
     // MARK: - Start Over Bar
@@ -151,18 +209,24 @@ struct ReportView: View {
             inputVM.reset()
             dismiss()
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 16, weight: .bold))
                 Text("Start Over")
-                    .font(.system(size: 17, weight: .semibold))
-                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 17, weight: .bold))
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
-            .background(AppTheme.accent, in: RoundedRectangle(cornerRadius: 20))
+            .background(
+                LinearGradient(colors: [AppTheme.primary, AppTheme.primaryContainer],
+                               startPoint: .leading, endPoint: .trailing),
+                in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusXL, style: .continuous)
+            )
+            .shadow(color: AppTheme.primary.opacity(0.22), radius: 16, x: 0, y: 6)
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 32)
+        .padding(.vertical, 14)
         .background(.ultraThinMaterial)
     }
 }
