@@ -4,6 +4,7 @@ import SwiftData
 struct SavedListDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var inputVM: InputViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @Bindable var list: SavedItemList
     @Binding var isRootPresented: Bool
@@ -12,7 +13,7 @@ struct SavedListDetailView: View {
     @State private var showNameRequiredAlert = false
     @State private var isEditingItems = false
     @State private var isRenamingList = false
-    @State private var draftListName: String = ""
+    @State private var draftListName = ""
 
     struct DraftItem: Identifiable {
         let id = UUID()
@@ -24,208 +25,296 @@ struct SavedListDetailView: View {
         ZStack {
             AppTheme.background.ignoresSafeArea()
 
-            Form {
-                Section(header: Text("Items").font(.headline)) {
-                    if list.items.isEmpty && !isEditingItems {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("No items yet")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(AppTheme.textPrimary)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // List header card
+                    listHeaderCard
+                        .padding(.top, 4)
 
-                            Text("Add a few items you often buy so you can quickly reuse this list.")
-                                .font(.system(size: 13))
-                                .foregroundStyle(AppTheme.textSecondary)
+                    // Items section
+                    itemsSection
 
-                            Button {
-                                isEditingItems = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "plus.circle.fill")
-                                        .foregroundStyle(AppTheme.accent)
-                                    Text("Add first item")
-                                        .foregroundStyle(AppTheme.accent)
-                                }
-                                .padding(.vertical, 8)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                                .fill(AppTheme.cardBackground)
-                        )
-                    } else {
-                        ForEach(list.items) { item in
-                            HStack {
-                                TextField("Item name", text: binding(for: item, keyPath: \.name))
-                                CurrencyPriceField(priceInCents: bindingForPriceInCents(of: item))
-                                Button {
-                                    deleteItem(item)
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(.red)
-                                        .font(.system(size: 14))
-                                }
-                            }
-                        }
-                        .onDelete(perform: deleteItems)
-
-                        ForEach($draftItems) { $draft in
-                            HStack {
-                                TextField("New item name", text: $draft.name)
-                                CurrencyPriceField(priceInCents: $draft.priceInCents)
-                            }
-                        }
-
-                        Button {
-                            saveAllValidDrafts()
-                            addNewDraftRow()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus.circle")
-                                    .font(.system(size: 16, weight: .regular))
-                                    .foregroundStyle(AppTheme.accent)
-                                Text("Add Item Row")
-                                    .foregroundStyle(AppTheme.accent)
-                            }
-                        }
-                    }
+                    Color.clear.frame(height: 16)
                 }
+                .padding(.horizontal, 20)
+                .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
+                .frame(maxWidth: .infinity)
             }
-            .scrollContentBackground(.hidden)
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 6) {
-                    Button {
-                        draftListName = list.name
-                        isRenamingList = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(list.name.isEmpty ? "List" : list.name)
-                                .font(.headline)
-                            Image(systemName: "pencil")
-                                .font(.system(size: 14, weight: .semibold))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Use List") {
-                    applyToInput()
-                    isRootPresented = false
-                }
-                .disabled(list.items.isEmpty)
-            }
-        }
+        .toolbar { detailToolbar }
         .onAppear {
-            // Ensure at least one draft row exists when view appears
-            if draftItems.isEmpty {
-                draftItems.append(DraftItem())
-            }
-            if !list.items.isEmpty {
-                isEditingItems = true
-            }
+            if draftItems.isEmpty { draftItems.append(DraftItem()) }
+            if !list.items.isEmpty { isEditingItems = true }
         }
         .onDisappear {
-            // Save any remaining valid draft items
             saveAllValidDrafts()
-
-            // Validate that the list has a name
-            let trimmedName = list.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmedName.isEmpty && !list.items.isEmpty {
-                // If name is empty but items exist, show alert
+            let trimmed = list.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty && !list.items.isEmpty {
                 showNameRequiredAlert = true
-            } else if trimmedName.isEmpty && list.items.isEmpty {
-                // If name is empty and no items, delete the list
+            } else if trimmed.isEmpty {
                 modelContext.delete(list)
             } else {
-                list.name = trimmedName
+                list.name = trimmed
             }
-
             try? modelContext.save()
         }
-        .alert("Rename List", isPresented: $isRenamingList, actions: {
+        .alert("Rename List", isPresented: $isRenamingList) {
             TextField("List name", text: $draftListName)
-            Button("Cancel") {}
-                .foregroundStyle(.red)
+            Button("Cancel", role: .cancel) {}
             Button("Save") {
                 let trimmed = draftListName.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
-                    list.name = trimmed
-                }
+                if !trimmed.isEmpty { list.name = trimmed }
             }
-        })
-        .alert("List Name Required", isPresented: $showNameRequiredAlert, actions: {
+        }
+        .alert("List Name Required", isPresented: $showNameRequiredAlert) {
             Button("OK", role: .cancel) {}
-        }, message: {
-            Text("Please provide a name for this list before saving.")
-        })
+        } message: {
+            Text("Please provide a name for this list.")
+        }
     }
 
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var detailToolbar: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            Button {
+                draftListName = list.name
+                isRenamingList = true
+            } label: {
+                HStack(spacing: 5) {
+                    Text(list.name.isEmpty ? "Untitled List" : list.name)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(AppTheme.onSurface)
+                    Image(systemName: "pencil")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AppTheme.outline)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Use List") {
+                applyToInput()
+                isRootPresented = false
+            }
+            .font(.system(size: 15, weight: .bold))
+            .foregroundStyle(list.items.isEmpty ? AppTheme.outlineVariant : .white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(
+                list.items.isEmpty ? AppTheme.surfaceHigh : AppTheme.primary,
+                in: Capsule()
+            )
+            .disabled(list.items.isEmpty)
+        }
+    }
+
+    // MARK: - Header Card
+
+    private var listHeaderCard: some View {
+        HStack(alignment: .lastTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("CATALOGUE")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(2)
+                    .foregroundStyle(AppTheme.primary.opacity(0.6))
+                Text(list.name.isEmpty ? "Untitled" : list.name)
+                    .font(.system(size: 28, weight: .heavy))
+                    .foregroundStyle(AppTheme.onSurface)
+                    .lineLimit(1)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 1) {
+                Text("\(list.items.count)")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(AppTheme.primary)
+                Text("ITEMS")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(1.5)
+                    .foregroundStyle(AppTheme.outline)
+            }
+        }
+        .padding(20)
+        .background(AppTheme.surfaceLow, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous))
+    }
+
+    // MARK: - Items Section
+
+    private var itemsSection: some View {
+        VStack(spacing: 12) {
+            // Section label
+            HStack {
+                Text("ITEMS")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(2)
+                    .foregroundStyle(AppTheme.outline)
+                Spacer()
+            }
+            .padding(.horizontal, 2)
+
+            // Add new item row (always at top when editing)
+            addItemRow
+
+            // Existing saved items
+            if !list.items.isEmpty || isEditingItems {
+                LazyVStack(spacing: 8) {
+                    ForEach(list.items) { item in
+                        SavedItemRow(
+                            name: bindingForName(of: item),
+                            priceInCents: bindingForPrice(of: item),
+                            onDelete: { deleteItem(item) }
+                        )
+                    }
+                }
+            } else {
+                emptyItemsCard
+            }
+
+            // Draft rows
+            if isEditingItems {
+                LazyVStack(spacing: 8) {
+                    ForEach($draftItems) { $draft in
+                        DraftItemRow(draft: $draft)
+                    }
+                }
+            }
+        }
+    }
+
+    private var addItemRow: some View {
+        Button {
+            saveAllValidDrafts()
+            draftItems.append(DraftItem())
+            isEditingItems = true
+        } label: {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.primaryFixed)
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(AppTheme.primary)
+                }
+                Text("Add item")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppTheme.onSurfaceVariant)
+                Spacer()
+            }
+            .padding(14)
+            .background(AppTheme.surfaceHigh, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var emptyItemsCard: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "tray")
+                .font(.system(size: 24))
+                .foregroundStyle(AppTheme.outlineVariant)
+            Text("No items yet")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppTheme.onSurfaceVariant)
+            Text("Add items you buy often to this list.")
+                .font(.system(size: 13))
+                .foregroundStyle(AppTheme.outline)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(32)
+        .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .shadow(color: AppTheme.onSurface.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+
+    // MARK: - Data Operations
+
     private func saveAllValidDrafts() {
-        var savedDraftIds: [UUID] = []
-
+        var idsToRemove: [UUID] = []
         for draft in draftItems {
-            let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard draft.priceInCents > 0 || !trimmedName.isEmpty else { continue }
-
-            let finalName = trimmedName.isEmpty ? "Unnamed item" : trimmedName
-
-            // Check if not already in list
+            let trimmed = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard draft.priceInCents > 0 || !trimmed.isEmpty else { continue }
+            let finalName = trimmed.isEmpty ? "Unnamed item" : trimmed
             if !list.items.contains(where: { $0.name == finalName && $0.priceInCents == draft.priceInCents }) {
                 let item = SavedItem(name: finalName, priceInCents: draft.priceInCents, list: list)
                 list.items.append(item)
-                savedDraftIds.append(draft.id)
+                idsToRemove.append(draft.id)
             }
         }
-
-        // Remove saved drafts
-        draftItems.removeAll { savedDraftIds.contains($0.id) }
-    }
-
-    private func addNewDraftRow() {
-        draftItems.append(DraftItem())
+        draftItems.removeAll { idsToRemove.contains($0.id) }
     }
 
     private func deleteItem(_ item: SavedItem) {
-        if let index = list.items.firstIndex(where: { $0.id == item.id }) {
-            list.items.remove(at: index)
-            modelContext.delete(item)
-        }
-    }
-
-    private func deleteItems(at offsets: IndexSet) {
-        for index in offsets {
-            let item = list.items[index]
-            modelContext.delete(item)
-        }
-        list.items.remove(atOffsets: offsets)
-    }
-
-    private func binding(for item: SavedItem, keyPath: ReferenceWritableKeyPath<SavedItem, String>) -> Binding<String> {
-        Binding(
-            get: { item[keyPath: keyPath] },
-            set: { newValue in
-                item[keyPath: keyPath] = newValue
-            }
-        )
-    }
-
-    private func bindingForPriceInCents(of item: SavedItem) -> Binding<Int> {
-        Binding(
-            get: { item.priceInCents },
-            set: { item.priceInCents = $0 }
-        )
+        list.items.removeAll { $0.id == item.id }
+        modelContext.delete(item)
     }
 
     private func applyToInput() {
-        inputVM.items = list.items.map { saved in
-            ShoppingItem(name: saved.name, priceInCents: saved.priceInCents)
+        inputVM.items = list.items.map {
+            ShoppingItem(name: $0.name, priceInCents: $0.priceInCents)
         }
+    }
+
+    private func bindingForName(of item: SavedItem) -> Binding<String> {
+        Binding(get: { item.name }, set: { item.name = $0 })
+    }
+
+    private func bindingForPrice(of item: SavedItem) -> Binding<Int> {
+        Binding(get: { item.priceInCents }, set: { item.priceInCents = $0 })
     }
 }
 
+// MARK: - Saved Item Row
+
+private struct SavedItemRow: View {
+    @Binding var name: String
+    @Binding var priceInCents: Int
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onDelete) {
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Color.red.opacity(0.75))
+            }
+            .buttonStyle(.plain)
+
+            TextField("Item name", text: $name)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppTheme.onSurface)
+
+            CurrencyPriceField(priceInCents: $priceInCents)
+                .frame(width: 80, alignment: .trailing)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .shadow(color: AppTheme.onSurface.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+}
+
+// MARK: - Draft Item Row
+
+private struct DraftItemRow: View {
+    @Binding var draft: SavedListDetailView.DraftItem
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "circle.dashed")
+                .font(.system(size: 20))
+                .foregroundStyle(AppTheme.outlineVariant)
+
+            TextField("New item name", text: $draft.name)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppTheme.onSurface)
+
+            CurrencyPriceField(priceInCents: $draft.priceInCents)
+                .frame(width: 80, alignment: .trailing)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(AppTheme.surfaceHigh, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+    }
+}
