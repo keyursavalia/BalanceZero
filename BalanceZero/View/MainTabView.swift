@@ -3,24 +3,21 @@ import SwiftData
 
 struct MainTabView: View {
     @EnvironmentObject private var inputVM: InputViewModel
-    @State private var selectedTab = 0
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView {
             NavigationStack {
                 InputView()
             }
             .tabItem {
-                Label("Calculate", systemImage: "percent")
+                Label("Calculate", systemImage: "number.circle.fill")
             }
-            .tag(0)
 
             CalculationHistoryView()
                 .tabItem {
-                    Label("History", systemImage: "clock.arrow.circlepath")
+                    Label("History", systemImage: "clock.fill")
                 }
-                .tag(1)
         }
-        .tint(AppTheme.accent)
+        .tint(AppTheme.primary)
     }
 }
