@@ -141,24 +141,31 @@ struct BalanceOptimizer {
         
         var results: [[SelectedItem]] = []
         var counts = [Int](repeating: 0, count: validItems.count)
-        
+        var seen = Set<String>()
+
         func dfs(_ c: Int) {
             if results.count >= maxCombinations { return }
             if c == 0 {
+                let key = counts.enumerated()
+                    .filter { $0.element > 0 }
+                    .map { "\($0.offset):\($0.element)" }
+                    .joined(separator: "|")
+                guard !seen.contains(key) else { return }
+                seen.insert(key)
                 let selection: [SelectedItem] = counts.enumerated().compactMap { index, qty in
                     qty > 0 ? SelectedItem(item: validItems[index], quantity: qty) : nil
                 }
                 results.append(selection)
                 return
             }
-            
+
             for choice in predecessors[c] {
                 counts[choice.itemIndex] += 1
                 dfs(choice.previousCapacity)
                 counts[choice.itemIndex] -= 1
             }
         }
-        
+
         dfs(bestAmount)
         
         return (bestAmount, results)
