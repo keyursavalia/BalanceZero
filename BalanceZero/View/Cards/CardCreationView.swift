@@ -1,23 +1,22 @@
 import SwiftUI
 import SwiftData
 
-/// Presented as a sheet for both creating a new card and editing an existing one.
+/// Presented as a sheet (iPhone) or navigation push (iPad) for creating and editing cards.
 struct CardCreationView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
-    // When non-nil, the view is in edit mode
     var existingCard: Card? = nil
     var onSave: ((Card) -> Void)? = nil
 
-    // Form state — initialized from existingCard in .onAppear
     @State private var cardName: String = ""
     @State private var balanceDigits: String = ""
     @State private var selectedDesign: CardDesign = .classic
+    @State private var customColor: Color = Color(hex: "7b2ff7")
+    @State private var customCompanyName: String = ""
 
     @FocusState private var nameFocused: Bool
-
-    // MARK: - Derived
 
     private var isEditing: Bool { existingCard != nil }
 
@@ -34,54 +33,68 @@ struct CardCreationView: View {
         balanceInCents > 0
     }
 
-    // MARK: - Body
+    private var customColorHex: String {
+        customColor.toHex() ?? "7b2ff7"
+    }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.background.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(spacing: 28) {
-                        // Live card preview
-                        cardPreview
-                            .padding(.top, 8)
-
-                        // Form fields
-                        formSection
-
-                        // Design picker
-                        designPickerSection
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 120)
-                }
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) { saveBar }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { navToolbar }
-            .onAppear { prefill() }
+        // On iPad, CardCreationView is pushed into the parent NavigationStack via navigationDestination,
+        // so we only wrap in NavigationStack when presented as a sheet (iPhone).
+        if sizeClass == .regular {
+            content
+        } else {
+            NavigationStack { content }
         }
     }
 
-    // MARK: - Card preview (live updates as user types)
+    private var content: some View {
+        ZStack {
+            AppTheme.background.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 28) {
+                    cardPreview
+                        .padding(.top, 8)
+
+                    formSection
+
+                    designPickerSection
+
+                    if selectedDesign == .custom {
+                        customCardSection
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 120)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) { saveBar }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { navToolbar }
+        .onAppear { prefill() }
+    }
+
+    // MARK: - Card preview
 
     private var cardPreview: some View {
         CardVisualView(
             name: cardName.isEmpty ? "Card Name" : cardName,
             balanceInCents: balanceInCents,
-            design: selectedDesign
+            design: selectedDesign,
+            customColorHex: selectedDesign == .custom ? customColorHex : "",
+            customCompanyName: selectedDesign == .custom ? customCompanyName : ""
         )
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedDesign)
         .animation(.easeInOut(duration: 0.15), value: cardName)
         .animation(.easeInOut(duration: 0.15), value: balanceInCents)
+        .animation(.easeInOut(duration: 0.2), value: customColorHex)
+        .animation(.easeInOut(duration: 0.15), value: customCompanyName)
     }
 
     // MARK: - Form fields
 
     private var formSection: some View {
         VStack(spacing: 0) {
-            // Card name
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("CARD NAME")
                 TextField("e.g. My Visa, Starbucks Gift Card", text: $cardName)
@@ -95,7 +108,6 @@ struct CardCreationView: View {
 
             Spacer().frame(height: 20)
 
-            // Balance
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel(isEditing ? "STARTING BALANCE (UPDATES HISTORY)" : "STARTING BALANCE")
                 balanceField
@@ -135,7 +147,8 @@ struct CardCreationView: View {
                         designPill(design)
                     }
                 }
-                .padding(.horizontal, 2)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
             }
             .scrollIndicators(.never)
         }
@@ -149,27 +162,63 @@ struct CardCreationView: View {
             }
         } label: {
             VStack(spacing: 8) {
-                // Mini card swatch
-                CardVisualView(name: "", balanceInCents: 0, design: design, isCompact: true)
-                    .frame(width: 80)
-                    .scaleEffect(isSelected ? 1.06 : 1.0)
+                CardVisualView(
+                    name: "",
+                    balanceInCents: 0,
+                    design: design,
+                    isCompact: true,
+                    customColorHex: design == .custom ? customColorHex : "",
+                    customCompanyName: design == .custom ? customCompanyName : ""
+                )
+                .frame(width: 80)
+                .scaleEffect(isSelected ? 1.06 : 1.0)
 
                 Text(design.displayName)
                     .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                     .foregroundStyle(isSelected ? AppTheme.primary : AppTheme.outline)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(
                         isSelected ? AppTheme.primary : Color.clear,
                         lineWidth: 2
                     )
-                    .padding(-4)
             )
         }
         .buttonStyle(.plain)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
+
+    // MARK: - Custom card section
+
+    private var customCardSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                sectionLabel("CARD COLOR")
+                ColorPicker("Pick a color", selection: $customColor, supportsOpacity: false)
+                    .labelsHidden()
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                sectionLabel("COMPANY / BRAND NAME (OPTIONAL)")
+                TextField("e.g. VISA, TARGET, MY BANK", text: $customCompanyName)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(AppTheme.onSurface)
+                    .padding(16)
+                    .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+                    .autocorrectionDisabled()
+                    .autocapitalization(.allCharacters)
+                    .onChange(of: customCompanyName) { _, new in
+                        if new.count > 10 { customCompanyName = String(new.prefix(10)) }
+                    }
+            }
+        }
+        .transition(.opacity.combined(with: .move(edge: .top)))
     }
 
     // MARK: - Save bar
@@ -234,24 +283,50 @@ struct CardCreationView: View {
             maxDigits: 7
         )
         selectedDesign = card.design
+        if !card.customColorHex.isEmpty {
+            customColor = Color(hex: card.customColorHex)
+        }
+        customCompanyName = card.customCompanyName
     }
 
     private func save() {
         guard canSave else { return }
         let trimmedName = cardName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let colorHex = selectedDesign == .custom ? customColorHex : ""
+        let companyName = selectedDesign == .custom ? customCompanyName.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         if let card = existingCard {
             card.name = trimmedName
             card.initialBalanceInCents = balanceInCents
             card.design = selectedDesign
+            card.customColorHex = colorHex
+            card.customCompanyName = companyName
             try? modelContext.save()
             onSave?(card)
         } else {
-            let card = Card(name: trimmedName, initialBalanceInCents: balanceInCents, design: selectedDesign)
+            let card = Card(
+                name: trimmedName,
+                initialBalanceInCents: balanceInCents,
+                design: selectedDesign,
+                customColorHex: colorHex,
+                customCompanyName: companyName
+            )
             modelContext.insert(card)
             try? modelContext.save()
             onSave?(card)
         }
         dismiss()
+    }
+}
+
+// MARK: - Color → hex helper
+
+private extension Color {
+    func toHex() -> String? {
+        let ui = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard ui.getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        let ri = Int(r * 255), gi = Int(g * 255), bi = Int(b * 255)
+        return String(format: "%02x%02x%02x", ri, gi, bi)
     }
 }
 
