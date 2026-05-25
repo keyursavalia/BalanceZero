@@ -19,10 +19,8 @@ struct CalculationHistoryView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 20) {
-                            summaryCard
-                                .padding(.top, 4)
-
                             listSection
+                                .padding(.top, 4)
                         }
                         .padding(.horizontal, 20)
                         .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
@@ -47,10 +45,12 @@ struct CalculationHistoryView: View {
 
     @ToolbarContentBuilder
     private var historyToolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            Text("History")
-                .font(.system(size: 17, weight: .heavy))
-                .foregroundStyle(AppTheme.primary)
+        if sizeClass != .regular {
+            ToolbarItem(placement: .principal) {
+                Text("History")
+                    .font(.system(size: 17, weight: .heavy))
+                    .foregroundStyle(AppTheme.primary)
+            }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             if !calculations.isEmpty {
@@ -61,60 +61,6 @@ struct CalculationHistoryView: View {
                 .foregroundStyle(AppTheme.primary)
             }
         }
-    }
-
-    // MARK: - Summary Card
-
-    private var summaryCard: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // Decorative blob
-            Circle()
-                .fill(AppTheme.primary.opacity(0.06))
-                .frame(width: 160, height: 160)
-                .blur(radius: 30)
-                .offset(x: 60, y: 30)
-                .allowsHitTesting(false)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("CALCULATIONS")
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(2)
-                    .foregroundStyle(AppTheme.onSurfaceVariant)
-
-                Text(monthlySavedDisplay)
-                    .font(.system(size: 40, weight: .heavy))
-                    .foregroundStyle(AppTheme.primary)
-
-                HStack(spacing: 8) {
-                    Text("\(perfectMatchCount) perfect match\(perfectMatchCount == 1 ? "" : "es")")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(AppTheme.tertiary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(AppTheme.tertiaryFixed, in: Capsule())
-
-                    Text("\(calculations.count) total")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(AppTheme.onSurfaceVariant)
-                }
-            }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .background(AppTheme.surfaceLow, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous))
-    }
-
-    private var monthlySavedDisplay: String {
-        let now = Date()
-        let calendar = Calendar.current
-        let total = calculations
-            .filter { calendar.isDate($0.createdAt, equalTo: now, toGranularity: .month) }
-            .reduce(0) { $0 + $1.balanceInCents }
-        return formatCents(total)
-    }
-
-    private var perfectMatchCount: Int {
-        calculations.filter { $0.matchQualityKind == "perfect" }.count
     }
 
     // MARK: - List Section
