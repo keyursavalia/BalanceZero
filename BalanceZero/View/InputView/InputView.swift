@@ -2,6 +2,9 @@ import SwiftUI
 import SwiftData
 
 struct InputView: View {
+    /// When opened from a card's detail, this pre-fills the balance field with the card's current balance.
+    var initialBalanceInCents: Int? = nil
+
     @EnvironmentObject private var vm: InputViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -53,6 +56,12 @@ struct InputView: View {
         } message: {
             Text(vm.validationMessage)
         }
+        .onAppear {
+            // Pre-fill balance from the card whenever this view appears (including after "Start Over")
+            if let cents = initialBalanceInCents {
+                vm.balanceText = CurrencyInputHelper.formattedFromCents(cents)
+            }
+        }
     }
 
     // MARK: - Navigation Toolbar
@@ -61,10 +70,10 @@ struct InputView: View {
     private var navigationToolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             HStack(spacing: 6) {
-                Image(systemName: "creditcard.fill")
+                Image(systemName: "function")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(AppTheme.primary)
-                Text("BalanceZero")
+                Text("Calculator")
                     .font(.system(size: 17, weight: .heavy))
                     .foregroundStyle(AppTheme.primary)
             }
