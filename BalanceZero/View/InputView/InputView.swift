@@ -69,14 +69,9 @@ struct InputView: View {
     @ToolbarContentBuilder
     private var navigationToolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            HStack(spacing: 6) {
-                Image(systemName: "function")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AppTheme.primary)
-                Text("Calculator")
-                    .font(.system(size: 17, weight: .heavy))
-                    .foregroundStyle(AppTheme.primary)
-            }
+            Text("Minimizer")
+                .font(.system(size: 17, weight: .heavy))
+                .foregroundStyle(AppTheme.primary)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
@@ -167,29 +162,7 @@ struct InputView: View {
                     vm.addItem()
                 }
             }
-
-            // Hint card — shows when items exist
-            if vm.items.filter({ $0.priceInCents > 0 }).count > 0 {
-                hintCard
-                    .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-            }
         }
-    }
-
-    // MARK: - Hint card
-
-    private var hintCard: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 16))
-                .foregroundStyle(AppTheme.primary)
-            Text("Keep adding items until your balance hits exactly **zero**.")
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(AppTheme.onSurfaceVariant)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(16)
-        .background(AppTheme.primaryFixed.opacity(0.5), in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
     }
 
     // MARK: - Calculate CTA Bar
@@ -205,9 +178,9 @@ struct InputView: View {
                             .tint(.white)
                             .scaleEffect(0.9)
                     } else {
-                        Image(systemName: "function")
+                        Image(systemName: "wand.and.sparkles")
                             .font(.system(size: 18, weight: .bold))
-                        Text("Calculate Zero")
+                        Text("Find Zero")
                             .font(.system(size: 17, weight: .bold))
                     }
                 }
@@ -233,7 +206,7 @@ struct InputView: View {
             .padding(.vertical, 14)
 
             if !vm.canCalculate {
-                Text("Enter your card balance and at least one item to calculate.")
+                Text("Enter your balance and at least one item price to minimize.")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(AppTheme.outline)
                     .multilineTextAlignment(.center)
