@@ -100,13 +100,7 @@ struct SavedListDetailView: View {
                 isRootPresented = false
             }
             .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(list.items.isEmpty ? AppTheme.outlineVariant : .white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(
-                list.items.isEmpty ? AppTheme.surfaceHigh : AppTheme.primary,
-                in: Capsule()
-            )
+            .foregroundStyle(list.items.isEmpty ? AppTheme.outlineVariant : AppTheme.primary)
             .disabled(list.items.isEmpty)
         }
     }
@@ -176,7 +170,9 @@ struct SavedListDetailView: View {
             if isEditingItems {
                 LazyVStack(spacing: 8) {
                     ForEach($draftItems) { $draft in
-                        DraftItemRow(draft: $draft)
+                        DraftItemRow(draft: $draft, onDelete: {
+                            draftItems.removeAll { $0.id == draft.id }
+                        })
                     }
                 }
             }
@@ -299,12 +295,26 @@ private struct SavedItemRow: View {
 
 private struct DraftItemRow: View {
     @Binding var draft: SavedListDetailView.DraftItem
+    var onDelete: (() -> Void)? = nil
+
+    private var hasContent: Bool { !draft.name.isEmpty || draft.priceInCents > 0 }
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "circle.dashed")
-                .font(.system(size: 20))
-                .foregroundStyle(AppTheme.outlineVariant)
+            if hasContent {
+                Button(action: { onDelete?() }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.red.opacity(0.75))
+                }
+                .buttonStyle(.plain)
+                .transition(.scale(scale: 0.8).combined(with: .opacity))
+            } else {
+                Image(systemName: "circle.dashed")
+                    .font(.system(size: 20))
+                    .foregroundStyle(AppTheme.outlineVariant)
+                    .transition(.opacity)
+            }
 
             TextField("New item name", text: $draft.name)
                 .font(.system(size: 15, weight: .semibold))
@@ -316,5 +326,6 @@ private struct DraftItemRow: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(AppTheme.surfaceHigh, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .animation(.spring(response: 0.28, dampingFraction: 0.78), value: hasContent)
     }
 }
