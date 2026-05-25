@@ -7,8 +7,8 @@ enum CardDesign: String, CaseIterable, Codable {
     case mastercard
     case target
     case starbucks
-    case amex
-    case rose
+    case silver
+    case custom
 
     var displayName: String {
         switch self {
@@ -18,8 +18,8 @@ enum CardDesign: String, CaseIterable, Codable {
         case .mastercard: return "Mastercard"
         case .target:     return "Target"
         case .starbucks:  return "Starbucks"
-        case .amex:       return "Amex"
-        case .rose:       return "Rose"
+        case .silver:     return "Silver"
+        case .custom:     return "Custom"
         }
     }
 
@@ -31,12 +31,11 @@ enum CardDesign: String, CaseIterable, Codable {
         case .mastercard: return [Color(hex: "b71c1c"), Color(hex: "e65100")]
         case .target:     return [Color(hex: "b71c1c"), Color(hex: "e53935")]
         case .starbucks:  return [Color(hex: "1b5e20"), Color(hex: "2e7d32")]
-        case .amex:       return [Color(hex: "263238"), Color(hex: "37474f")]
-        case .rose:       return [Color(hex: "880e4f"), Color(hex: "c2185b")]
+        case .silver:     return [Color(hex: "546e7a"), Color(hex: "90a4ae")]
+        case .custom:     return [Color(hex: "4a148c"), Color(hex: "7b1fa2")]
         }
     }
 
-    // Used in the design picker pill and as decorative element on the card
     var symbolName: String {
         switch self {
         case .classic:    return "creditcard.fill"
@@ -45,24 +44,21 @@ enum CardDesign: String, CaseIterable, Codable {
         case .mastercard: return "circle.lefthalf.filled"
         case .target:     return "target"
         case .starbucks:  return "star.fill"
-        case .amex:       return "shield.fill"
-        case .rose:       return "heart.fill"
+        case .silver:     return "circle.fill"
+        case .custom:     return "paintpalette.fill"
         }
     }
 
-    // Short badge displayed in the top-right of the card; empty for non-branded designs
     var typeLabel: String {
         switch self {
         case .visa:       return "VISA"
         case .mastercard: return "MC"
         case .target:     return "TARGET"
         case .starbucks:  return "SBUX"
-        case .amex:       return "AMEX"
         default:          return ""
         }
     }
 
-    // Lighter highlight color used for decorative blobs on the card surface
     var accentColor: Color {
         switch self {
         case .classic:    return Color(hex: "b9c3ff")
@@ -71,8 +67,8 @@ enum CardDesign: String, CaseIterable, Codable {
         case .mastercard: return Color(hex: "ffccbc")
         case .target:     return Color(hex: "ef9a9a")
         case .starbucks:  return Color(hex: "a5d6a7")
-        case .amex:       return Color(hex: "b0bec5")
-        case .rose:       return Color(hex: "f48fb1")
+        case .silver:     return Color(hex: "cfd8dc")
+        case .custom:     return Color(hex: "ce93d8")
         }
     }
 }
