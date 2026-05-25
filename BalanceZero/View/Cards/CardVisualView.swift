@@ -9,6 +9,33 @@ struct CardVisualView: View {
     /// When true the card renders at a smaller size suitable for design picker pills.
     var isCompact: Bool = false
 
+    /// For `.custom` design: hex color string (e.g. "7b2ff7"). If empty, falls back to design defaults.
+    var customColorHex: String = ""
+    /// For `.custom` design: company/brand name shown as type badge. If empty, no badge shown.
+    var customCompanyName: String = ""
+
+    private var effectiveGradientColors: [Color] {
+        if design == .custom, !customColorHex.isEmpty {
+            let base = Color(hex: customColorHex)
+            return [base.opacity(0.85), base]
+        }
+        return design.gradientColors
+    }
+
+    private var effectiveTypeLabel: String {
+        if design == .custom {
+            return customCompanyName.uppercased()
+        }
+        return design.typeLabel
+    }
+
+    private var effectiveAccentColor: Color {
+        if design == .custom, !customColorHex.isEmpty {
+            return Color(hex: customColorHex).opacity(0.5)
+        }
+        return design.accentColor
+    }
+
     private var balance: String {
         formatCents(balanceInCents)
     }
@@ -19,7 +46,7 @@ struct CardVisualView: View {
         ZStack {
             // Gradient background
             LinearGradient(
-                colors: design.gradientColors,
+                colors: effectiveGradientColors,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -43,7 +70,7 @@ struct CardVisualView: View {
         )
         .aspectRatio(1.586, contentMode: .fit)
         .shadow(
-            color: design.gradientColors.first?.opacity(isCompact ? 0 : 0.35) ?? .clear,
+            color: effectiveGradientColors.first?.opacity(isCompact ? 0 : 0.35) ?? .clear,
             radius: 24,
             x: 0,
             y: 10
@@ -93,12 +120,15 @@ struct CardVisualView: View {
 
     @ViewBuilder
     private var typeBadge: some View {
-        if !design.typeLabel.isEmpty {
-            Text(design.typeLabel)
+        let label = effectiveTypeLabel
+        if !label.isEmpty {
+            Text(label)
                 .font(.system(size: isCompact ? 8 : 14, weight: .black, design: .default))
                 .tracking(isCompact ? 0.5 : 1.5)
                 .foregroundStyle(Color.white.opacity(0.92))
-        } else {
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        } else if design != .custom {
             Image(systemName: design.symbolName)
                 .font(.system(size: isCompact ? 10 : 20, weight: .semibold))
                 .foregroundStyle(Color.white.opacity(0.72))
@@ -143,7 +173,7 @@ struct CardVisualView: View {
 
             // Small accent blob — bottom left
             Circle()
-                .fill(design.accentColor.opacity(0.14))
+                .fill(effectiveAccentColor.opacity(0.14))
                 .frame(
                     width: isCompact ? 50 : 120,
                     height: isCompact ? 50 : 120
