@@ -53,9 +53,18 @@ struct CardDetailView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(AppTheme.cornerRadiusLG)
         }
-        .sheet(isPresented: $showEditCard) {
+        .sheet(isPresented: Binding(
+            get: { showEditCard && sizeClass != .regular },
+            set: { showEditCard = $0 }
+        )) {
             CardCreationView(existingCard: card)
                 .presentationDragIndicator(.visible)
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { showEditCard && sizeClass == .regular },
+            set: { showEditCard = $0 }
+        )) {
+            CardCreationView(existingCard: card)
         }
         .alert("Delete Card?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) { deleteCard() }
@@ -71,7 +80,9 @@ struct CardDetailView: View {
         CardVisualView(
             name: card.name,
             balanceInCents: currentBalance,
-            design: card.design
+            design: card.design,
+            customColorHex: card.customColorHex,
+            customCompanyName: card.customCompanyName
         )
     }
 
@@ -138,14 +149,14 @@ struct CardDetailView: View {
             }
             .buttonStyle(.plain)
 
-            // Open calculator
+            // Open minimizer
             Button {
                 navigateToCalculator = true
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "function")
+                    Image(systemName: "wand.and.sparkles")
                         .font(.system(size: 16, weight: .semibold))
-                    Text("Calculate")
+                    Text("Minimizer")
                         .font(.system(size: 15, weight: .bold))
                 }
                 .foregroundStyle(.white)
@@ -234,14 +245,9 @@ struct CardDetailView: View {
     @ToolbarContentBuilder
     private var detailToolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            VStack(spacing: 1) {
-                Text(card.name)
-                    .font(.system(size: 17, weight: .heavy))
-                    .foregroundStyle(AppTheme.primary)
-                Text(card.design.displayName)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(AppTheme.outline)
-            }
+            Text(card.name)
+                .font(.system(size: 17, weight: .heavy))
+                .foregroundStyle(AppTheme.primary)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Menu {
