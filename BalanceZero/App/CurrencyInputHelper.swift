@@ -3,8 +3,9 @@ import Foundation
 /// Shared logic for modern currency input: digits only, fixed period, max 5 digits (2 decimals).
 enum CurrencyInputHelper {
 
-    static func extractDigits(from s: String) -> String {
-        String(s.filter { $0.isNumber }.prefix(5))
+    // maxDigits: 5 → up to $999.99 (calculator inputs), 7 → up to $99,999.99 (card balances/transactions)
+    static func extractDigits(from s: String, maxDigits: Int = 5) -> String {
+        String(s.filter { $0.isNumber }.prefix(maxDigits))
     }
 
     static func formatDigitsToAmount(_ digits: String) -> String {
