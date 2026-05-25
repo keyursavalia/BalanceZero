@@ -141,17 +141,10 @@ struct BalanceOptimizer {
         
         var results: [[SelectedItem]] = []
         var counts = [Int](repeating: 0, count: validItems.count)
-        var seen = Set<String>()
 
         func dfs(_ c: Int) {
             if results.count >= maxCombinations { return }
             if c == 0 {
-                let key = counts.enumerated()
-                    .filter { $0.element > 0 }
-                    .map { "\($0.offset):\($0.element)" }
-                    .joined(separator: "|")
-                guard !seen.contains(key) else { return }
-                seen.insert(key)
                 let selection: [SelectedItem] = counts.enumerated().compactMap { index, qty in
                     qty > 0 ? SelectedItem(item: validItems[index], quantity: qty) : nil
                 }
@@ -167,8 +160,19 @@ struct BalanceOptimizer {
         }
 
         dfs(bestAmount)
-        
-        return (bestAmount, results)
+
+        // Deduplicate: two DFS paths can reach the same item-quantity multiset via different
+        // traversal order. Use a stable key (sorted by index in validItems) to filter.
+        var seenKeys = Set<String>()
+        let deduped = results.filter { selection in
+            let key = selection
+                .sorted { $0.item.id.uuidString < $1.item.id.uuidString }
+                .map { "\($0.item.id.uuidString):\($0.quantity)" }
+                .joined(separator: "|")
+            return seenKeys.insert(key).inserted
+        }
+
+        return (bestAmount, deduped)
     }
     
     private func mergeSelections(
