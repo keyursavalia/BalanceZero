@@ -11,8 +11,8 @@ struct ItemRowView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                // Delete button — only shown when item has a price
-                if item.priceInCents > 0 {
+                // Delete button — shown as soon as any input exists
+                if item.priceInCents > 0 || !item.name.isEmpty {
                     Button(action: onDelete) {
                         Image(systemName: "trash")
                             .font(.system(size: 14, weight: .medium))
@@ -42,7 +42,7 @@ struct ItemRowView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: item.priceInCents > 0)
+            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: item.priceInCents > 0 || !item.name.isEmpty)
 
             // Constraint picker — slides in when a quantity is set
             if item.mandatoryQuantity > 0 {
@@ -107,7 +107,7 @@ struct ItemRowView: View {
         HStack(spacing: 8) {
             Text("Include:")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(AppTheme.outline)
+                .foregroundStyle(AppTheme.onSurface)
                 .tracking(0.5)
 
             Picker("Constraint", selection: $item.quantityConstraint) {
@@ -116,6 +116,7 @@ struct ItemRowView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .tint(AppTheme.primary)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 14)
