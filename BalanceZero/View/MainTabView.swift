@@ -7,10 +7,11 @@ struct MainTabView: View {
     var body: some View {
         TabView {
             NavigationStack {
-                InputView()
+                CardsView()
+                    .environmentObject(inputVM)
             }
             .tabItem {
-                Label("Calculate", systemImage: "number.circle.fill")
+                Label("Wallet", systemImage: "wallet.pass.fill")
             }
 
             CalculationHistoryView()
