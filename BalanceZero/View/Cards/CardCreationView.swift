@@ -256,10 +256,14 @@ struct CardCreationView: View {
                 .font(.system(size: 17, weight: .heavy))
                 .foregroundStyle(AppTheme.primary)
         }
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button("Cancel") { dismiss() }
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(AppTheme.onSurfaceVariant)
+        // On iPad the view is pushed via navigationDestination, so the system back button
+        // already handles dismissal. Only show Cancel when presented as a sheet (iPhone).
+        if sizeClass != .regular {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") { dismiss() }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppTheme.onSurfaceVariant)
+            }
         }
     }
 
