@@ -7,6 +7,8 @@ final class Card {
     var initialBalanceInCents: Int
     var designRawValue: String
     var createdAt: Date
+    var customColorHex: String = ""
+    var customCompanyName: String = ""
     @Relationship(deleteRule: .cascade, inverse: \CardTransaction.card)
     var transactions: [CardTransaction] = []
 
@@ -14,11 +16,15 @@ final class Card {
         name: String,
         initialBalanceInCents: Int,
         design: CardDesign = .classic,
+        customColorHex: String = "",
+        customCompanyName: String = "",
         createdAt: Date = .now
     ) {
         self.name = name
         self.initialBalanceInCents = initialBalanceInCents
         self.designRawValue = design.rawValue
+        self.customColorHex = customColorHex
+        self.customCompanyName = customCompanyName
         self.createdAt = createdAt
     }
 
