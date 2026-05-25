@@ -21,9 +21,18 @@ struct CardsView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { walletToolbar }
-        .sheet(isPresented: $showCardCreation) {
+        .sheet(isPresented: Binding(
+            get: { showCardCreation && sizeClass != .regular },
+            set: { showCardCreation = $0 }
+        )) {
             CardCreationView()
                 .presentationDragIndicator(.visible)
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { showCardCreation && sizeClass == .regular },
+            set: { showCardCreation = $0 }
+        )) {
+            CardCreationView()
         }
     }
 
@@ -107,7 +116,9 @@ struct CardsView: View {
                             CardVisualView(
                                 name: card.name,
                                 balanceInCents: card.currentBalanceInCents,
-                                design: card.design
+                                design: card.design,
+                                customColorHex: card.customColorHex,
+                                customCompanyName: card.customCompanyName
                             )
                             .frame(width: cardWidth)
                             .scrollTransition(.animated.threshold(.visible(0.5))) { content, phase in
@@ -260,14 +271,16 @@ struct CardsView: View {
 
     @ToolbarContentBuilder
     private var walletToolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            HStack(spacing: 6) {
-                Image(systemName: "wallet.pass.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AppTheme.primary)
-                Text("BalanceZero")
-                    .font(.system(size: 17, weight: .heavy))
-                    .foregroundStyle(AppTheme.primary)
+        if sizeClass != .regular {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 6) {
+                    Image(systemName: "wallet.pass.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(AppTheme.primary)
+                    Text("BalanceZero")
+                        .font(.system(size: 17, weight: .heavy))
+                        .foregroundStyle(AppTheme.primary)
+                }
             }
         }
     }
