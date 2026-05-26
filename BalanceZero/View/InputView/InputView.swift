@@ -13,7 +13,9 @@ struct InputView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
+            AppTheme.background
+                .ignoresSafeArea()
+                .dismissKeyboardOnBackgroundTap()
             backgroundDecoration
 
             ScrollView {
@@ -30,6 +32,7 @@ struct InputView: View {
                 .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
                 .frame(maxWidth: .infinity)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             calculateBar
@@ -78,10 +81,8 @@ struct InputView: View {
                 showingSavedLists = true
             } label: {
                 Image(systemName: "list.bullet.rectangle.portrait")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(AppTheme.primary)
-                    .frame(width: 36, height: 36)
-                    .background(AppTheme.primaryFixed, in: Circle())
             }
         }
     }
