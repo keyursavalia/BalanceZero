@@ -94,7 +94,6 @@ final class InputViewModel: ObservableObject {
 
     func reset() {
         balanceText = ""
-        items = [ShoppingItem(name: "", priceInCents: 0)]
         result = nil
         showValidationError = false
         validationMessage = ""
