@@ -49,7 +49,9 @@ struct CardCreationView: View {
 
     private var content: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
+            AppTheme.background
+                .ignoresSafeArea()
+                .dismissKeyboardOnBackgroundTap()
 
             ScrollView {
                 VStack(spacing: 28) {
@@ -67,6 +69,7 @@ struct CardCreationView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 120)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { saveBar }
         .navigationBarTitleDisplayMode(.inline)
@@ -97,7 +100,9 @@ struct CardCreationView: View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("CARD NAME")
-                TextField("e.g. My Visa, Starbucks Gift Card", text: $cardName)
+                TextField("", text: $cardName,
+                          prompt: Text("e.g. My Visa, Starbucks Gift Card")
+                              .foregroundColor(AppTheme.outline))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(AppTheme.onSurface)
                     .padding(16)
@@ -206,7 +211,9 @@ struct CardCreationView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("COMPANY / BRAND NAME (OPTIONAL)")
-                TextField("e.g. VISA, TARGET, MY BANK", text: $customCompanyName)
+                TextField("", text: $customCompanyName,
+                          prompt: Text("e.g. VISA, TARGET, MY BANK")
+                              .foregroundColor(AppTheme.outline))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(AppTheme.onSurface)
                     .padding(16)
