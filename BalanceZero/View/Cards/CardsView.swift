@@ -65,7 +65,7 @@ struct CardsView: View {
     // MARK: - Wallet header
 
     private var walletHeader: some View {
-        HStack(alignment: .lastTextBaseline) {
+        HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("MY WALLET")
                     .font(.system(size: 10, weight: .bold))
@@ -272,14 +272,9 @@ struct CardsView: View {
     private var walletToolbar: some ToolbarContent {
         if sizeClass != .regular {
             ToolbarItem(placement: .principal) {
-                HStack(spacing: 6) {
-                    Image(systemName: "wallet.pass.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(AppTheme.primary)
-                    Text("BalanceZero")
-                        .font(.system(size: 17, weight: .heavy))
-                        .foregroundStyle(AppTheme.primary)
-                }
+                Text("BalanceZero")
+                    .font(.system(size: 17, weight: .heavy))
+                    .foregroundStyle(AppTheme.primary)
             }
         }
     }
