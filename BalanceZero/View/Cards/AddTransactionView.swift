@@ -24,7 +24,9 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.background.ignoresSafeArea()
+                AppTheme.background
+                    .ignoresSafeArea()
+                    .dismissKeyboardOnBackgroundTap()
 
                 ScrollView {
                     VStack(spacing: 28) {
@@ -36,6 +38,7 @@ struct AddTransactionView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 120)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) { logBar }
             .navigationBarTitleDisplayMode(.inline)
@@ -78,7 +81,9 @@ struct AddTransactionView: View {
     private var noteSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             label("NOTE (OPTIONAL)")
-            TextField("e.g. Groceries, Gas station...", text: $note)
+            TextField("", text: $note,
+                      prompt: Text("e.g. Groceries, Gas station...")
+                          .foregroundColor(AppTheme.outline))
                 .font(.system(size: 16, weight: .regular))
                 .foregroundStyle(AppTheme.onSurface)
                 .padding(16)
