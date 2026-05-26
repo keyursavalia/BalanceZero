@@ -9,7 +9,7 @@ struct SavedListDetailView: View {
     @Bindable var list: SavedItemList
     @Binding var isRootPresented: Bool
 
-    @State private var draftItems: [DraftItem] = [DraftItem()]
+    @State private var draftItems: [DraftItem] = []
     @State private var showNameRequiredAlert = false
     @State private var isEditingItems = false
     @State private var isRenamingList = false
@@ -47,8 +47,10 @@ struct SavedListDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { detailToolbar }
         .onAppear {
-            if draftItems.isEmpty { draftItems.append(DraftItem()) }
-            if !list.items.isEmpty { isEditingItems = true }
+            if !list.items.isEmpty {
+                isEditingItems = true
+                if draftItems.isEmpty { draftItems.append(DraftItem()) }
+            }
         }
         .onDisappear {
             saveAllValidDrafts()
@@ -250,6 +252,7 @@ struct SavedListDetailView: View {
     }
 
     private func applyToInput() {
+        saveAllValidDrafts()
         inputVM.items = list.items.map {
             ShoppingItem(name: $0.name, priceInCents: $0.priceInCents)
         }
