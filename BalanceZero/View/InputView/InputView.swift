@@ -2,8 +2,11 @@ import SwiftUI
 import SwiftData
 
 struct InputView: View {
-    /// When opened from a card's detail, this pre-fills the balance field with the card's current balance.
     var initialBalanceInCents: Int? = nil
+    var cardGradientColors: [Color]? = nil
+    var sourceCardName: String = ""
+    var sourceCardDesignRawValue: String = ""
+    var sourceCardCustomColorHex: String = ""
 
     @EnvironmentObject private var vm: InputViewModel
     @Environment(\.modelContext) private var modelContext
@@ -22,7 +25,8 @@ struct InputView: View {
                 VStack(spacing: 20) {
                     BalanceInputCard(
                         balanceText: $vm.balanceText,
-                        balanceInCents: vm.balanceInCents
+                        balanceInCents: vm.balanceInCents,
+                        cardGradientColors: cardGradientColors
                     )
 
                     itemsSection
@@ -49,7 +53,12 @@ struct InputView: View {
         }
         .onChange(of: vm.result) { _, newValue in
             if let result = newValue {
-                let saved = SavedCalculation.from(result)
+                let saved = SavedCalculation.from(
+                    result,
+                    cardName: sourceCardName,
+                    cardDesignRawValue: sourceCardDesignRawValue,
+                    cardCustomColorHex: sourceCardCustomColorHex
+                )
                 modelContext.insert(saved)
                 try? modelContext.save()
             }
