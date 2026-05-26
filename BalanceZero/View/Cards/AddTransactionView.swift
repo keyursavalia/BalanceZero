@@ -19,7 +19,8 @@ struct AddTransactionView: View {
         CurrencyInputHelper.centsFromFormatted(formattedAmount)
     }
 
-    private var canLog: Bool { amountInCents > 0 }
+    private var isOverLimit: Bool { amountInCents > card.currentBalanceInCents }
+    private var canLog: Bool { amountInCents > 0 && !isOverLimit }
 
     var body: some View {
         NavigationStack {
@@ -55,7 +56,7 @@ struct AddTransactionView: View {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("$")
                     .font(.system(size: 40, weight: .heavy))
-                    .foregroundStyle(amountInCents > 0 ? AppTheme.primary : AppTheme.outlineVariant)
+                    .foregroundStyle(isOverLimit ? Color(hex: "b71c1c") : (amountInCents > 0 ? AppTheme.primary : AppTheme.outlineVariant))
 
                 LargeTransactionField(
                     digits: $amountDigits,
@@ -71,8 +72,9 @@ struct AddTransactionView: View {
                 AppTheme.surfaceLowest,
                 in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous)
             )
-            .shadow(color: AppTheme.primary.opacity(amountInCents > 0 ? 0.08 : 0), radius: 10, x: 0, y: 4)
+            .shadow(color: (isOverLimit ? Color(hex: "b71c1c") : AppTheme.primary).opacity(amountInCents > 0 ? 0.08 : 0), radius: 10, x: 0, y: 4)
             .animation(.easeInOut(duration: 0.2), value: amountInCents > 0)
+            .animation(.easeInOut(duration: 0.15), value: isOverLimit)
         }
     }
 
@@ -121,8 +123,23 @@ struct AddTransactionView: View {
                 }
             }
             .padding(20)
+
+            if isOverLimit {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Amount exceeds your available balance.")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .foregroundStyle(Color(hex: "b71c1c"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
         .background(AppTheme.surfaceLow, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .animation(.spring(response: 0.28, dampingFraction: 0.8), value: isOverLimit)
         .animation(.easeInOut(duration: 0.15), value: amountInCents)
     }
 
