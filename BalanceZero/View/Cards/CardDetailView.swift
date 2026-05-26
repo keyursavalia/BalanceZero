@@ -22,6 +22,14 @@ struct CardDetailView: View {
     private var totalSpent: Int { card.totalSpentInCents }
     private var isOverdrawn: Bool { currentBalance < 0 }
 
+    private var cardGradientColors: [Color] {
+        if card.design == .custom, !card.customColorHex.isEmpty {
+            let base = Color(hex: card.customColorHex)
+            return [base.opacity(0.85), base]
+        }
+        return card.design.gradientColors
+    }
+
     var body: some View {
         ZStack {
             AppTheme.background.ignoresSafeArea()
@@ -44,8 +52,14 @@ struct CardDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { detailToolbar }
         .navigationDestination(isPresented: $navigateToCalculator) {
-            InputView(initialBalanceInCents: currentBalance)
-                .environmentObject(inputVM)
+            InputView(
+                initialBalanceInCents: currentBalance,
+                cardGradientColors: cardGradientColors,
+                sourceCardName: card.name,
+                sourceCardDesignRawValue: card.design.rawValue,
+                sourceCardCustomColorHex: card.customColorHex
+            )
+            .environmentObject(inputVM)
         }
         .sheet(isPresented: $showAddTransaction) {
             AddTransactionView(card: card)
