@@ -23,7 +23,9 @@ struct SavedListDetailView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
+            AppTheme.background
+                .ignoresSafeArea()
+                .dismissKeyboardOnBackgroundTap()
 
             ScrollView {
                 VStack(spacing: 20) {
@@ -40,6 +42,7 @@ struct SavedListDetailView: View {
                 .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
                 .frame(maxWidth: .infinity)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { detailToolbar }
