@@ -2,9 +2,7 @@ import SwiftUI
 
 struct ItemRowView: View {
     @Binding var item: ShoppingItem
-    var isLastRow: Bool
     var onDelete: () -> Void
-    var onPriceBecameNonZero: (() -> Void)?
 
     @FocusState private var nameFocused: Bool
 
@@ -53,11 +51,6 @@ struct ItemRowView: View {
         .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
         .shadow(color: AppTheme.onSurface.opacity(0.05), radius: 8, x: 0, y: 3)
         .animation(.spring(response: 0.3, dampingFraction: 0.75), value: item.mandatoryQuantity > 0)
-        .onChange(of: item.priceInCents) { oldValue, newValue in
-            if oldValue == 0 && newValue > 0, isLastRow {
-                onPriceBecameNonZero?()
-            }
-        }
     }
 
     // MARK: - Quantity Stepper
