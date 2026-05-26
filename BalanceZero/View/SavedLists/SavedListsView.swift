@@ -198,7 +198,7 @@ struct SavedListsView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(AppTheme.onSurfaceVariant)
                 }
-                .padding(.top, 8)
+                .padding(.top, 28)
                 .padding(.bottom, 32)
 
                 VStack(alignment: .leading, spacing: 8) {
