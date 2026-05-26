@@ -10,6 +10,10 @@ final class SavedCalculation {
     /// JSON-encoded list of all optimal selections (each selection is an array of items).
     /// Stored to allow history to preserve and browse all combinations.
     var allSelectionsData: Data?
+    /// Card metadata — stored as plain strings so history survives card deletion.
+    var cardName: String = ""
+    var cardDesignRawValue: String = ""
+    var cardCustomColorHex: String = ""
     @Relationship(deleteRule: .cascade, inverse: \SavedResultItem.calculation)
     var items: [SavedResultItem] = []
 
@@ -18,12 +22,18 @@ final class SavedCalculation {
         matchQualityKind: String,
         matchQualityRemainingCents: Int = 0,
         allSelectionsData: Data? = nil,
+        cardName: String = "",
+        cardDesignRawValue: String = "",
+        cardCustomColorHex: String = "",
         createdAt: Date = .now
     ) {
         self.balanceInCents = balanceInCents
         self.matchQualityKind = matchQualityKind
         self.matchQualityRemainingCents = matchQualityRemainingCents
         self.allSelectionsData = allSelectionsData
+        self.cardName = cardName
+        self.cardDesignRawValue = cardDesignRawValue
+        self.cardCustomColorHex = cardCustomColorHex
         self.createdAt = createdAt
     }
 
@@ -70,14 +80,22 @@ final class SavedCalculation {
         )
     }
 
-    static func from(_ result: OptimizationResult) -> SavedCalculation {
+    static func from(
+        _ result: OptimizationResult,
+        cardName: String = "",
+        cardDesignRawValue: String = "",
+        cardCustomColorHex: String = ""
+    ) -> SavedCalculation {
         let (kind, remaining) = matchQualityToStorage(result.matchQuality)
         let encodedAllSelections = encodeAllSelections(result.allSelections)
         let saved = SavedCalculation(
             balanceInCents: result.balanceInCents,
             matchQualityKind: kind,
             matchQualityRemainingCents: remaining,
-            allSelectionsData: encodedAllSelections
+            allSelectionsData: encodedAllSelections,
+            cardName: cardName,
+            cardDesignRawValue: cardDesignRawValue,
+            cardCustomColorHex: cardCustomColorHex
         )
         saved.items = result.selectedItems.map { sel in
             SavedResultItem(
