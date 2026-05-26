@@ -5,6 +5,7 @@ struct ReportView: View {
     @ObservedObject var vm: ReportViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
+    var showsStartOver: Bool = true
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -21,31 +22,20 @@ struct ReportView: View {
 
                     infoCard
 
-                    Color.clear.frame(height: 100)
+                    Color.clear.frame(height: showsStartOver ? 100 : 0)
                 }
                 .padding(.horizontal, 20)
                 .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
                 .frame(maxWidth: .infinity)
             }
 
-            startOverBar
+            if showsStartOver {
+                startOverBar
+            }
         }
         .navigationTitle("Report")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(false)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    // Share — placeholder for post-MVP
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.primary)
-                        .frame(width: 36, height: 36)
-                        .background(AppTheme.primaryFixed, in: Circle())
-                }
-            }
-        }
     }
 
     // MARK: - Stat Grid
