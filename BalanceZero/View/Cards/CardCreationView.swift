@@ -6,6 +6,7 @@ struct CardCreationView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Query private var allCards: [Card]
 
     var existingCard: Card? = nil
     var onSave: ((Card) -> Void)? = nil
@@ -28,9 +29,18 @@ struct CardCreationView: View {
         CurrencyInputHelper.centsFromFormatted(formattedBalance)
     }
 
+    private var isDuplicateName: Bool {
+        let trimmed = cardName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty else { return false }
+        return allCards.contains {
+            $0.name.lowercased() == trimmed && $0.persistentModelID != existingCard?.persistentModelID
+        }
+    }
+
     private var canSave: Bool {
         !cardName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        balanceInCents > 0
+        balanceInCents > 0 &&
+        !isDuplicateName
     }
 
     private var customColorHex: String {
@@ -107,9 +117,25 @@ struct CardCreationView: View {
                     .foregroundStyle(AppTheme.onSurface)
                     .padding(16)
                     .background(AppTheme.surfaceLowest, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous)
+                            .strokeBorder(isDuplicateName ? Color(hex: "b71c1c").opacity(0.6) : Color.clear, lineWidth: 1.5)
+                    )
                     .autocorrectionDisabled()
                     .focused($nameFocused)
+
+                if isDuplicateName {
+                    HStack(spacing: 5) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 12))
+                        Text("A card with this name already exists.")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(Color(hex: "b71c1c"))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
+            .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isDuplicateName)
 
             Spacer().frame(height: 20)
 
