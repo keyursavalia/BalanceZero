@@ -111,7 +111,7 @@ struct CardCreationView: View {
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("CARD NAME")
                 TextField("", text: $cardName,
-                          prompt: Text("e.g. My Visa, Starbucks Gift Card")
+                          prompt: Text("e.g. Daily Driver, Weekend Card")
                               .foregroundColor(AppTheme.outline))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(AppTheme.onSurface)
@@ -238,7 +238,7 @@ struct CardCreationView: View {
             VStack(alignment: .leading, spacing: 8) {
                 sectionLabel("COMPANY / BRAND NAME (OPTIONAL)")
                 TextField("", text: $customCompanyName,
-                          prompt: Text("e.g. VISA, TARGET, MY BANK")
+                          prompt: Text("e.g. EMBER, FROST, NOVA")
                               .foregroundColor(AppTheme.outline))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(AppTheme.onSurface)
