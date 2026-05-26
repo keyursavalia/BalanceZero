@@ -151,15 +151,9 @@ struct InputView: View {
                         get: { index < vm.items.count ? vm.items[index] : ShoppingItem(name: "", priceInCents: 0) },
                         set: { if index < vm.items.count { vm.items[index] = $0 } }
                     ),
-                    isLastRow: index == vm.items.count - 1,
                     onDelete: {
                         vm.removeItem(at: IndexSet(integer: index))
-                    },
-                    onPriceBecameNonZero: index == vm.items.count - 1 ? {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                            vm.addItem()
-                        }
-                    } : nil
+                    }
                 )
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.95, anchor: .top).combined(with: .opacity),
@@ -168,6 +162,10 @@ struct InputView: View {
             }
 
             AddItemButton {
+                let last = vm.items.last
+                let lastHasContent = (last?.priceInCents ?? 0) > 0 ||
+                    !(last?.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+                guard lastHasContent || vm.items.isEmpty else { return }
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                     vm.addItem()
                 }
