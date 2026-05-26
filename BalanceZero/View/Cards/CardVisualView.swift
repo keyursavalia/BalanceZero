@@ -23,10 +23,7 @@ struct CardVisualView: View {
     }
 
     private var effectiveTypeLabel: String {
-        if design == .custom {
-            return customCompanyName.uppercased()
-        }
-        return design.typeLabel
+        design == .custom ? customCompanyName.uppercased() : ""
     }
 
     private var effectiveAccentColor: Color {
