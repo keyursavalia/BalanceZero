@@ -61,7 +61,8 @@ struct AddTransactionView: View {
                 LargeTransactionField(
                     digits: $amountDigits,
                     maxDigits: 7,
-                    formattedValue: formattedAmount
+                    formattedValue: formattedAmount,
+                    isOverLimit: isOverLimit
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: 64)
@@ -230,6 +231,7 @@ private struct LargeTransactionField: UIViewRepresentable {
     @Binding var digits: String
     let maxDigits: Int
     let formattedValue: String
+    var isOverLimit: Bool = false
 
     func makeUIView(context: Context) -> UITextField {
         let field = UITextField()
@@ -258,7 +260,11 @@ private struct LargeTransactionField: UIViewRepresentable {
 
     private func updateColor(_ f: UITextField) {
         let hasCents = CurrencyInputHelper.centsFromFormatted(formattedValue) > 0
-        f.textColor = UIColor(hasCents ? AppTheme.primary : AppTheme.outlineVariant)
+        if isOverLimit {
+            f.textColor = UIColor(Color(hex: "b71c1c"))
+        } else {
+            f.textColor = UIColor(hasCents ? AppTheme.primary : AppTheme.outlineVariant)
+        }
     }
 
     private func pinToEnd(_ f: UITextField) {
