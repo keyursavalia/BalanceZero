@@ -82,10 +82,8 @@ struct SavedListsView: View {
                     isPresentingNewListSheet = true
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
-                        .background(AppTheme.primary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(AppTheme.primary)
                 }
             }
         }
