@@ -4,9 +4,11 @@ import UIKit
 struct BalanceInputCard: View {
     @Binding var balanceText: String
     let balanceInCents: Int
+    var cardGradientColors: [Color]? = nil
     @State private var displayText: String = "0.00"
 
     private var hasValue: Bool { balanceInCents > 0 }
+    private var gradientColors: [Color] { cardGradientColors ?? [AppTheme.primary, AppTheme.primaryContainer] }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -53,13 +55,13 @@ struct BalanceInputCard: View {
         }
         .background(
             LinearGradient(
-                colors: [AppTheme.primary, AppTheme.primaryContainer],
+                colors: gradientColors,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
             in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous)
         )
-        .shadow(color: AppTheme.primary.opacity(0.28), radius: 20, x: 0, y: 8)
+        .shadow(color: gradientColors.first?.opacity(0.28) ?? AppTheme.primary.opacity(0.28), radius: 20, x: 0, y: 8)
         .onAppear { syncDisplayFromBalance() }
         .onChange(of: balanceText) { _, _ in
             let formatted = CurrencyInputHelper.formatDigitsToAmount(
