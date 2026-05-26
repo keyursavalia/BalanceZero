@@ -136,13 +136,12 @@ struct CardsView: View {
             .scrollIndicators(.never)
             .safeAreaPadding(.horizontal, sidePadding)
         }
-        .frame(height: cardCarouselHeight)
+        .frame(height: cardCarouselHeight(for: UIScreen.main.bounds.width))
     }
 
-    private var cardCarouselHeight: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
+    private func cardCarouselHeight(for screenWidth: CGFloat) -> CGFloat {
         let cardWidth = min(screenWidth - 64, 360.0)
-        return cardWidth / 1.586 + 24 // card height + shadow breathing room
+        return cardWidth / 1.586 + 24
     }
 
     // MARK: - Page indicator
