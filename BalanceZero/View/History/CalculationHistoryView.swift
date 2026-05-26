@@ -9,6 +9,28 @@ struct CalculationHistoryView: View {
     @State private var isShowingClearAlert = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    // Groups: named cards (alphabetical) then "General" for untagged
+    private var groups: [(key: String, designRawValue: String, customColorHex: String, items: [SavedCalculation])] {
+        var buckets: [String: [SavedCalculation]] = [:]
+        var meta: [String: (designRawValue: String, customColorHex: String)] = [:]
+        for calc in calculations {
+            let key = calc.cardName.isEmpty ? "" : calc.cardName
+            buckets[key, default: []].append(calc)
+            if !key.isEmpty && meta[key] == nil {
+                meta[key] = (calc.cardDesignRawValue, calc.cardCustomColorHex)
+            }
+        }
+        var result: [(key: String, designRawValue: String, customColorHex: String, items: [SavedCalculation])] = []
+        for key in buckets.keys.filter({ !$0.isEmpty }).sorted() {
+            let m = meta[key] ?? ("", "")
+            result.append((key, m.designRawValue, m.customColorHex, buckets[key]!))
+        }
+        if let general = buckets[""] {
+            result.append(("", "", "", general))
+        }
+        return result
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -18,11 +40,14 @@ struct CalculationHistoryView: View {
                     emptyState
                 } else {
                     ScrollView {
-                        VStack(spacing: 20) {
-                            listSection
-                                .padding(.top, 4)
+                        VStack(spacing: 28) {
+                            ForEach(groups, id: \.key) { group in
+                                cardGroup(group)
+                            }
                         }
                         .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 20)
                         .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
                         .frame(maxWidth: .infinity)
                     }
@@ -31,7 +56,7 @@ struct CalculationHistoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { historyToolbar }
             .navigationDestination(item: $selectedCalculation) { calc in
-                ReportView(vm: ReportViewModel(result: calc.optimizationResult))
+                ReportView(vm: ReportViewModel(result: calc.optimizationResult), showsStartOver: false)
                     .environmentObject(inputVM)
             }
             .alert("Clear history?", isPresented: $isShowingClearAlert) {
@@ -63,18 +88,17 @@ struct CalculationHistoryView: View {
         }
     }
 
-    // MARK: - List Section
+    // MARK: - Card Group
 
-    private var listSection: some View {
+    private func cardGroup(
+        _ group: (key: String, designRawValue: String, customColorHex: String, items: [SavedCalculation])
+    ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("RECENT CALCULATIONS")
-                .font(.system(size: 10, weight: .bold))
-                .tracking(2)
-                .foregroundStyle(AppTheme.outline)
-                .padding(.horizontal, 2)
+            // Section header
+            cardGroupHeader(name: group.key, designRawValue: group.designRawValue, customColorHex: group.customColorHex)
 
             LazyVStack(spacing: 8) {
-                ForEach(calculations) { calc in
+                ForEach(group.items) { calc in
                     Button {
                         selectedCalculation = calc
                     } label: {
@@ -91,6 +115,47 @@ struct CalculationHistoryView: View {
                 }
             }
         }
+    }
+
+    private func cardGroupHeader(name: String, designRawValue: String, customColorHex: String) -> some View {
+        let design = CardDesign(rawValue: designRawValue)
+        let gradientColors: [Color] = {
+            if let d = design {
+                if d == .custom, !customColorHex.isEmpty {
+                    let base = Color(hex: customColorHex)
+                    return [base.opacity(0.85), base]
+                }
+                return d.gradientColors
+            }
+            return [AppTheme.outlineVariant, AppTheme.outline]
+        }()
+        let label = name.isEmpty ? "General" : name
+        let icon = design?.symbolName ?? "wand.and.sparkles"
+
+        return HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(
+                        LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .frame(width: 30, height: 30)
+                Image(systemName: name.isEmpty ? "wand.and.sparkles" : icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+
+            Text(label.uppercased())
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.5)
+                .foregroundStyle(AppTheme.onSurface)
+
+            Spacer()
+
+            Text("\(groups.first(where: { $0.key == name })?.items.count ?? 0)")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppTheme.outline)
+        }
+        .padding(.horizontal, 2)
     }
 
     // MARK: - Empty State
@@ -131,7 +196,6 @@ struct CalculationHistoryView: View {
             }
 
             Spacer().frame(height: 32)
-
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -148,13 +212,6 @@ struct CalculationHistoryView: View {
     private func clearAllHistory() {
         calculations.forEach { modelContext.delete($0) }
         try? modelContext.save()
-    }
-
-    private func formatCents(_ cents: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: (Decimal(cents) / 100) as NSDecimalNumber) ?? "$0.00"
     }
 }
 
