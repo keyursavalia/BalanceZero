@@ -262,8 +262,8 @@ struct CardDetailView: View {
                     Label("Delete Card", systemImage: "trash")
                 }
             } label: {
-                Image(systemName: "ellipsis.circle.fill")
-                    .font(.system(size: 20))
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(AppTheme.primary)
             }
         }
