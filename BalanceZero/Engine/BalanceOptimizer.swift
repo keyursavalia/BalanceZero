@@ -9,6 +9,10 @@
 
 import Foundation
 
+protocol BalanceOptimizerProtocol: Sendable {
+    func optimize(input: BalanceOptimizer.Input) -> OptimizationResult?
+}
+
 struct BalanceOptimizer {
     
     static let maximumSupportedCents: Int = 99_999
@@ -142,24 +146,35 @@ struct BalanceOptimizer {
         var results: [[SelectedItem]] = []
         var counts = [Int](repeating: 0, count: validItems.count)
 
-        func dfs(_ c: Int) {
-            if results.count >= maxCombinations { return }
-            if c == 0 {
-                let selection: [SelectedItem] = counts.enumerated().compactMap { index, qty in
-                    qty > 0 ? SelectedItem(item: validItems[index], quantity: qty) : nil
-                }
-                results.append(selection)
-                return
-            }
+        // Iterative DFS — avoids call-stack overflow on large balances with cheap items.
+        // Three frame kinds simulate the recursive backtracking pattern:
+        //   .increment  → counts[idx] += 1  (before descending a choice)
+        //   .process    → evaluate capacity c (push children or record a result)
+        //   .undo       → counts[idx] -= 1  (after a choice's subtree is done)
+        enum Frame { case increment(Int), process(Int), undo(Int) }
 
-            for choice in predecessors[c] {
-                counts[choice.itemIndex] += 1
-                dfs(choice.previousCapacity)
-                counts[choice.itemIndex] -= 1
+        var stack: [Frame] = [.process(bestAmount)]
+
+        while let frame = stack.popLast(), results.count < maxCombinations {
+            switch frame {
+            case .increment(let idx): counts[idx] += 1
+            case .undo(let idx):      counts[idx] -= 1
+            case .process(let c):
+                if c == 0 {
+                    let selection: [SelectedItem] = counts.enumerated().compactMap { idx, qty in
+                        qty > 0 ? SelectedItem(item: validItems[idx], quantity: qty) : nil
+                    }
+                    results.append(selection)
+                } else if results.count < maxCombinations {
+                    // Push choices in reverse so they are popped (and explored) in original order.
+                    for choice in predecessors[c].reversed() {
+                        stack.append(.undo(choice.itemIndex))
+                        stack.append(.process(choice.previousCapacity))
+                        stack.append(.increment(choice.itemIndex))
+                    }
+                }
             }
         }
-
-        dfs(bestAmount)
 
         // Deduplicate: two DFS paths can reach the same item-quantity multiset via different
         // traversal order. Use a stable key (sorted by index in validItems) to filter.
@@ -174,7 +189,7 @@ struct BalanceOptimizer {
 
         return (bestAmount, deduped)
     }
-    
+
     private func mergeSelections(
         exactItems: [SelectedItem],
         minimumBaseItems: [SelectedItem],
@@ -205,3 +220,5 @@ struct BalanceOptimizer {
             .sorted { $0.totalCents > $1.totalCents }
     }
 }
+
+extension BalanceOptimizer: BalanceOptimizerProtocol {}
