@@ -40,6 +40,10 @@ final class Card {
     var currentBalanceInCents: Int {
         initialBalanceInCents - totalSpentInCents
     }
+
+    var clampedCurrentBalance: Int {
+        max(0, currentBalanceInCents)
+    }
 }
 
 @Model
