@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="BalanceZero/Assets.xcSCREENS/AppIcon.appiconset/Icon-iOS-Default-1024x1024@1x.png" width="96" alt="BalanceZero app icon" />
+  <img src="SCREENS/icon.png" width="96" alt="BalanceZero app icon" />
 </p>
 
 <h1 align="center">BalanceZero</h1>
