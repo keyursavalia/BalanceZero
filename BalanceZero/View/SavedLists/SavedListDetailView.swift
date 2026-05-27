@@ -9,17 +9,11 @@ struct SavedListDetailView: View {
     @Bindable var list: SavedItemList
     @Binding var isRootPresented: Bool
 
-    @State private var draftItems: [DraftItem] = []
+    @State private var newItemIds: Set<PersistentIdentifier> = []
     @State private var showNameRequiredAlert = false
     @State private var isEditingItems = false
     @State private var isRenamingList = false
     @State private var draftListName = ""
-
-    struct DraftItem: Identifiable {
-        let id = UUID()
-        var name: String = ""
-        var priceInCents: Int = 0
-    }
 
     var body: some View {
         ZStack {
@@ -49,11 +43,10 @@ struct SavedListDetailView: View {
         .onAppear {
             if !list.items.isEmpty {
                 isEditingItems = true
-                if draftItems.isEmpty { draftItems.append(DraftItem()) }
             }
         }
         .onDisappear {
-            saveAllValidDrafts()
+            finalizeNewItems()
             let trimmed = list.name.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty && !list.items.isEmpty {
                 showNameRequiredAlert = true
@@ -105,8 +98,14 @@ struct SavedListDetailView: View {
                 isRootPresented = false
             }
             .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(list.items.isEmpty ? AppTheme.outlineVariant : AppTheme.primary)
-            .disabled(list.items.isEmpty)
+            .foregroundStyle(hasAnyValidItems ? AppTheme.primary : AppTheme.outlineVariant)
+            .disabled(!hasAnyValidItems)
+        }
+    }
+
+    private var hasAnyValidItems: Bool {
+        list.items.contains {
+            !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.priceInCents > 0
         }
     }
 
@@ -126,7 +125,7 @@ struct SavedListDetailView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 1) {
-                Text("\(list.items.count)")
+                Text("\(validItemCount)")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(AppTheme.primary)
                 Text("ITEMS")
@@ -137,6 +136,12 @@ struct SavedListDetailView: View {
         }
         .padding(20)
         .background(AppTheme.surfaceLow, in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLG, style: .continuous))
+    }
+
+    private var validItemCount: Int {
+        list.items.filter {
+            !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.priceInCents > 0
+        }.count
     }
 
     // MARK: - Items Section
@@ -156,38 +161,36 @@ struct SavedListDetailView: View {
             // Add new item row (always at top when editing)
             addItemRow
 
-            // Existing saved items
+            // All items — new ones render with draft styling, existing with saved styling
             if !list.items.isEmpty || isEditingItems {
                 LazyVStack(spacing: 8) {
                     ForEach(list.items) { item in
-                        SavedItemRow(
-                            name: bindingForName(of: item),
-                            priceInCents: bindingForPrice(of: item),
-                            onDelete: { deleteItem(item) }
-                        )
+                        if newItemIds.contains(item.id) {
+                            DraftItemRow(
+                                name: bindingForName(of: item),
+                                priceInCents: bindingForPrice(of: item),
+                                onDelete: { deleteItem(item); newItemIds.remove(item.id) }
+                            )
+                        } else {
+                            SavedItemRow(
+                                name: bindingForName(of: item),
+                                priceInCents: bindingForPrice(of: item),
+                                onDelete: { deleteItem(item) }
+                            )
+                        }
                     }
                 }
             } else {
                 emptyItemsCard
-            }
-
-            // Draft rows
-            if isEditingItems {
-                LazyVStack(spacing: 8) {
-                    ForEach($draftItems) { $draft in
-                        DraftItemRow(draft: $draft, onDelete: {
-                            draftItems.removeAll { $0.id == draft.id }
-                        })
-                    }
-                }
             }
         }
     }
 
     private var addItemRow: some View {
         Button {
-            saveAllValidDrafts()
-            draftItems.append(DraftItem())
+            let newItem = SavedItem(name: "", priceInCents: 0, list: list)
+            list.items.append(newItem)
+            newItemIds.insert(newItem.id)
             isEditingItems = true
         } label: {
             HStack(spacing: 10) {
@@ -231,31 +234,32 @@ struct SavedListDetailView: View {
 
     // MARK: - Data Operations
 
-    private func saveAllValidDrafts() {
-        var idsToRemove: [UUID] = []
-        for draft in draftItems {
-            let trimmed = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard draft.priceInCents > 0 || !trimmed.isEmpty else { continue }
-            let finalName = trimmed.isEmpty ? "Unnamed item" : trimmed
-            if !list.items.contains(where: { $0.name == finalName && $0.priceInCents == draft.priceInCents }) {
-                let item = SavedItem(name: finalName, priceInCents: draft.priceInCents, list: list)
-                list.items.append(item)
-                idsToRemove.append(draft.id)
+    // Cleans up new items on navigation: deletes blanks, assigns default names to partial fills.
+    private func finalizeNewItems() {
+        for item in list.items where newItemIds.contains(item.id) {
+            let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty && item.priceInCents == 0 {
+                list.items.removeAll { $0.id == item.id }
+                modelContext.delete(item)
+            } else if trimmed.isEmpty {
+                item.name = "Unnamed item"
+            } else {
+                item.name = trimmed
             }
         }
-        draftItems.removeAll { idsToRemove.contains($0.id) }
+        newItemIds.removeAll()
+    }
+
+    private func applyToInput() {
+        finalizeNewItems()
+        inputVM.items = list.items.map {
+            ShoppingItem(name: $0.name, priceInCents: $0.priceInCents)
+        }
     }
 
     private func deleteItem(_ item: SavedItem) {
         list.items.removeAll { $0.id == item.id }
         modelContext.delete(item)
-    }
-
-    private func applyToInput() {
-        saveAllValidDrafts()
-        inputVM.items = list.items.map {
-            ShoppingItem(name: $0.name, priceInCents: $0.priceInCents)
-        }
     }
 
     private func bindingForName(of item: SavedItem) -> Binding<String> {
@@ -300,10 +304,13 @@ private struct SavedItemRow: View {
 // MARK: - Draft Item Row
 
 private struct DraftItemRow: View {
-    @Binding var draft: SavedListDetailView.DraftItem
+    @Binding var name: String
+    @Binding var priceInCents: Int
     var onDelete: (() -> Void)? = nil
 
-    private var hasContent: Bool { !draft.name.isEmpty || draft.priceInCents > 0 }
+    private var hasContent: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || priceInCents > 0
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -322,11 +329,11 @@ private struct DraftItemRow: View {
                     .transition(.opacity)
             }
 
-            TextField("New item name", text: $draft.name)
+            TextField("New item name", text: $name)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(AppTheme.onSurface)
 
-            CurrencyPriceField(priceInCents: $draft.priceInCents)
+            CurrencyPriceField(priceInCents: $priceInCents)
                 .frame(width: 80, alignment: .trailing)
         }
         .padding(.horizontal, 16)
