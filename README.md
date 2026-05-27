@@ -1,125 +1,151 @@
-# BalanceZero
+<p align="center">
+  <img src="BalanceZero/Assets.xcSCREENS/AppIcon.appiconset/Icon-iOS-Default-1024x1024@1x.png" width="96" alt="BalanceZero app icon" />
+</p>
 
-> **An iOS utility that helps you spend down prepaid or gift card balances by finding the best combination of items to buy — ideally leaving $0.00.**
+<h1 align="center">BalanceZero</h1>
 
-BalanceZero is a native SwiftUI app for a narrow, practical problem: you have a fixed amount left on a card and a mental shopping list. Instead of guessing at the register, you enter your remaining balance and item prices; the app runs an optimization to maximize spend (and prefers an exact zero when possible). When several combinations tie for “best,” you can browse them and pick the one that fits how you actually shop.
+<p align="center">
+  A native iOS app for spending down gift and prepaid card balances — intelligently, to the cent.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-iOS%2018%2B-black?style=flat-square" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/language-Swift-orange?style=flat-square" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=flat-square" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" />
+</p>
+
+---
+
+## The Problem
+
+I was at Trader Joe's with about nineteen dollars left on a gift card. I had a few items in my basket and wanted to use the whole thing. I kept doing the math in my head as I walked the aisles — too much, swap something out, still off — and eventually gave up at the register and left a few dollars stranded on the card. On the drive home, one thought stuck: *this is a completely solvable problem computationally.* It is a variant of the classic subset-sum problem. No clean, focused app existed for it. So I built one.
+
+---
+
+## What It Does
+
+BalanceZero is two things in one.
+
+**A card wallet.** Add your gift cards, prepaid cards, and store credit. Each card tracks its own balance as you log transactions against it. You always know exactly what is left and where it went.
+
+**A spend minimizer.** When you are ready to shop, open the Minimizer from your card. Enter the items you are considering and their prices. The app finds the combination that brings your remaining balance as close to zero as possible — ideally exactly zero — using a dynamic programming engine running entirely on-device. When multiple equally optimal combinations exist, you can browse all of them and pick the one that works for how you actually shop.
+
+No account. No internet. No subscriptions. Everything lives on your device.
 
 ---
 
 ## Screenshots
 
-<p align="center">
-  <img src="SCREENS/01_INPUT/InputView-empty.png" width="180" alt="Input — empty" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/01_INPUT/InputView-populated.png" width="180" alt="Input — populated" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/01_INPUT/InputView-constraints.png" width="180" alt="Input — quantity constraints" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/02_REPORT/ReportView.png" width="180" alt="Optimization report" />
-</p>
+### Onboarding
 
-<p align="center">
-  <sub>Input — empty &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Input — populated &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Input — constraints &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Report</sub>
-</p>
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/onboarding-1.png" width="190" alt="Your Balance, Simplified" /><br/><sub>Your Balance, Simplified</sub></td>
+  <td align="center"><img src="SCREENS/onboarding-2.png" width="190" alt="Design Your Card" /><br/><sub>Design Your Card</sub></td>
+  <td align="center"><img src="SCREENS/onboarding-3.png" width="190" alt="Track Every Spend" /><br/><sub>Track Every Spend</sub></td>
+</tr></table>
 
 <br/>
 
-<p align="center">
-  <img src="SCREENS/02_REPORT/ReportView-empty.png" width="180" alt="Report — empty / no items" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/03_HISTORY/CalculationHistoryView-empty.png" width="180" alt="History — empty" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/03_HISTORY/CalculationHistoryView-list.png" width="180" alt="History — list" />
-</p>
+### Wallet
 
-<p align="center">
-  <sub>Report — empty &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  History — empty &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  History — list</sub>
-</p>
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/wallet-empty.png" width="190" alt="Empty wallet" /><br/><sub>Empty state</sub></td>
+  <td align="center"><img src="SCREENS/card-creation.png" width="190" alt="Adding a card" /><br/><sub>Adding a card</sub></td>
+  <td align="center"><img src="SCREENS/wallet.png" width="190" alt="Wallet with cards" /><br/><sub>Wallet overview</sub></td>
+</tr></table>
 
 <br/>
 
-<p align="center">
-  <img src="SCREENS/04_SAVED_LISTS/SavedListsView.png" width="180" alt="Saved lists" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/04_SAVED_LISTS/SavedListDetailView.png" width="180" alt="Saved list detail" />
-  &nbsp;&nbsp;
-  <img src="SCREENS/04_SAVED_LISTS/SavedListsView-new-list-empty.png" width="180" alt="New saved list — empty" />
-</p>
+### Card Detail & Transaction Log
 
-<p align="center">
-  <sub>Saved lists &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Saved list detail &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  New list — empty</sub>
-</p>
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/card-detail.png" width="190" alt="Card detail with transactions" /><br/><sub>Card detail</sub></td>
+  <td align="center"><img src="SCREENS/log-transaction.png" width="190" alt="Log a transaction" /><br/><sub>Log a transaction</sub></td>
+</tr></table>
+
+<br/>
+
+### Minimizer & Report
+
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/minimizer.png" width="190" alt="Minimizer input" /><br/><sub>Minimizer input</sub></td>
+  <td align="center"><img src="SCREENS/report-1.png" width="190" alt="Perfect match — option 1" /><br/><sub>Option 1 of 2</sub></td>
+  <td align="center"><img src="SCREENS/report-2.png" width="190" alt="Perfect match — option 2" /><br/><sub>Option 2 of 2</sub></td>
+</tr></table>
+
+<br/>
+
+### Saved Lists
+
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/saved-lists.png" width="190" alt="Saved lists" /><br/><sub>Your lists</sub></td>
+  <td align="center"><img src="SCREENS/list-detail.png" width="190" alt="List detail" /><br/><sub>List detail</sub></td>
+</tr></table>
 
 ---
 
 ## Features
 
-### Calculate (Input)
-- **Balance + items** — enter remaining card balance and a list of item names with prices; currency-style fields keep entry predictable on the keypad
-- **Mandatory quantities** — support for minimum or exact quantities per item when your shopping list isn’t “buy one of everything”
-- **Saved lists menu** — load a previously saved list of items into the current session from the items header
-- **Validation** — clear feedback when balance or items are missing or invalid before running optimization
-- **Primary CTA** — full-width “Calculate Zero” action pinned above the tab bar; shows progress while the optimizer runs
+### Wallet
 
-### Optimization report
-- **Match quality** — surfaces Perfect / Best Possible / No Solution with badges and copy that matches the outcome
-- **Stat cards** — original balance and total spent at a glance
-- **Multiple best combinations** — when the solver finds more than one equally optimal basket, browse with a compact `< Option X of N >` control
-- **Line items** — each selected line shows quantity, unit price where relevant, and line total
-- **Summary card** — short explanation of what the result means for your remaining balance
-- **Start over** — resets input and dismisses back to calculate; gradient-styled primary action consistent with the rest of the app
+- Add as many cards as you have — gift cards, prepaid Visa and Mastercard, store credit, or any fixed-balance card
+- Seven built-in card designs; custom cards accept a brand name and a color of your choice
+- Per-card transaction log with category icons inferred from the note (coffee, gas, groceries, and more recognized automatically)
+- Balance updates immediately as you log transactions; current balance and total spent shown at a glance
+- Aggregate view of total balance and total spent across all cards in your wallet
+
+### Minimizer
+
+- ATM-style input fields — digits land correctly from the right; no cursor positioning required
+- Optional mandatory quantities per item: *exactly N* locks a precise count; *at least N* lets the optimizer add more units of that item if it helps reach zero
+- Load a saved item list into the current session in one tap
+- Report shows remaining balance, original balance, and total spend; remaining balance turns green and shows a confirmed badge when zero is achieved
+- Multiple equally optimal combinations are all surfaced and browseable with a `< Option X of N >` navigator — useful when one combination is more practical even though mathematically tied
+
+### Saved Lists
+
+- Create named catalogues of items with prices for stores you shop at regularly
+- Edit name, add items, and remove items at any time
+- One tap loads a list directly into the Minimizer
 
 ### History
-- **Chronological log** — past runs ordered by date; tap a row to reopen the full report (including combo browsing when stored)
-- **Summary strip** — month-to-date total and perfect-match count when you have history
-- **Swipe to delete** — remove individual entries; **Clear** in the toolbar wipes all (with confirmation)
-- **Empty state** — friendly copy when you have not run a calculation yet
 
-### Saved lists
-- **List overview** — named lists with item counts; create new lists from the toolbar
-- **List detail** — edit name and rows (name + price), add rows, delete rows; **Use List** applies items back to the Calculate screen
-- **New list flow** — dedicated empty state when creating a list before you add items
+- Every Minimizer run saves automatically
+- Tap any past result to replay the full report, including all the combinations found at the time
+- Month-to-date spend total and perfect-match count shown at the top when history exists
+- Swipe to remove individual entries; clear all at once from the toolbar with a confirmation prompt
 
-### Cross-cutting
-- **SwiftData persistence** — saved lists and calculation history live on-device; no account or sync
-- **Tab bar** — Calculate and History as root tabs with a shared navigation model
-- **Theming** — central `AppTheme` tokens for colour, type, and radii so the UI stays consistent across flows
-- **No backend** — all optimization runs locally; no network calls
+---
+
+## How the Optimizer Works
+
+The core problem is a bounded variant of subset-sum: given a target balance in integer cents and a set of items with prices and optional quantity limits, find the selection whose total cost is as high as possible without exceeding the balance, with exact zero preferred.
+
+The engine builds a dynamic programming table over integer cents, which keeps all arithmetic exact with no floating-point drift. During the fill phase, instead of recording just the optimal value at each capacity, it records every item choice that achieves that value — turning the DP table into a directed acyclic graph. Once the optimal spend is identified, a depth-first search enumerates all paths from that spend back to zero through the predecessor graph. Each path is a valid combination. Paths that represent the same multiset of items (same items and quantities, different enumeration order) are deduplicated before the results are returned. A cap of one hundred combinations prevents worst-case explosion.
+
+Mandatory quantities are handled in a pre-pass. Items marked *exact N* are pre-committed and excluded from the DP entirely; their cost is subtracted from the budget before the table is built. Items marked *at least N* are pre-committed at their base quantity but still participate in the DP for any additional units. The final output merges the pre-committed quantities, the DP selections, and per-item totals into a single coherent result.
+
+The computation runs on a background thread via Swift structured concurrency and re-enters the main actor to publish results when complete.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| | |
 |---|---|
-| Language | Swift 5 |
-| UI Framework | SwiftUI |
-| Architecture | MVVM — `InputViewModel` / `ReportViewModel` (`ObservableObject`); views own layout and interaction |
-| Concurrency | Swift concurrency (`Task`, `MainActor`) for off-main optimization |
-| Optimization | `BalanceOptimizer` — bounded knapsack / subset-sum style search on integer cents |
-| Persistence | SwiftData — `SavedCalculation`, `SavedItemList`, `SavedResultItem` |
-| Minimum deployment | iOS 26+ (see Xcode release notes for matching SDK) |
-| Dependency manager | Swift Package Manager — **no third-party packages** |
-
----
-
-## What I Learned
-
-Shipping a small “single-purpose” finance utility still forces real engineering trade-offs — especially around correctness, clarity, and not exploding runtime when balances get large.
-
-- **Integer cents everywhere** — modelling prices and balances as `Int` cents avoids floating-point drift when summing many line items or repeating quantities
-- **Unbounded knapsack on a budget** — the problem is a variant of subset-sum / knapsack; capping the search space keeps worst-case time predictable on device
-- **More than one “best” answer** — a single DP path only returns one reconstruction; recording predecessor ties and enumerating combinations (with a cap) lets users choose among equally optimal baskets
-- **Persisting full result sets** — history replays need the same `allSelections` the UI had at save time; encoding selections as JSON alongside the primary row keeps SwiftData models simple
-- **SwiftUI + SwiftData** — `@Query` and model relationships fit naturally with tab-based navigation; cascade deletes keep list and history cleanup straightforward
-- **UIKit bridges where it helps** — custom currency and balance fields sometimes use `UIViewRepresentable` for keypad and cursor behaviour that’s awkward to mimic purely in SwiftUI
+| Language | Swift |
+| UI framework | SwiftUI |
+| Persistence | SwiftData |
+| Architecture | MVVM — `InputViewModel` and `ReportViewModel` bound to `@MainActor` |
+| Concurrency | Swift structured concurrency — detached tasks, `@MainActor` result delivery |
+| Currency input | `UIViewRepresentable` wrapping `UITextField` for cursor-pinned ATM-style entry |
+| Optimization engine | `BalanceOptimizer.swift` — custom DP with predecessor tracking and DFS enumeration |
+| Deployment target | iOS 18+ |
+| Third-party packages | None |
 
 ---
 
@@ -128,67 +154,83 @@ Shipping a small “single-purpose” finance utility still forces real engineer
 ```
 BalanceZero/
 ├── App/
-│   ├── BalanceZeroApp.swift       # @main, SwiftData model container, root scene
-│   ├── AppTheme.swift             # Colours, typography, radii, gradients
-│   └── CurrencyInputHelper.swift   # Digit → currency string helpers
+│   ├── BalanceZeroApp.swift           # Entry point, SwiftData container, root scene
+│   ├── AppTheme.swift                 # Color palette, type scale, corner radii
+│   └── CurrencyInputHelper.swift      # Digit-string to formatted currency conversion
 │
 ├── Engine/
-│   └── BalanceOptimizer.swift     # DP + multi-combination enumeration + merge with mandatory items
+│   └── BalanceOptimizer.swift         # DP table, predecessor graph, combination enumeration
 │
 ├── Model/
-│   ├── ShoppingItem.swift         # Item model (price, mandatory qty, constraints)
-│   ├── OptimizationResult.swift    # Selected lines, match quality, allSelections
-│   ├── SavedCalculationModels.swift # SwiftData: saved calculations + JSON for all combos
-│   └── SavedItemModels.swift      # SwiftData: saved item lists
+│   ├── ShoppingItem.swift             # Input item: name, price, quantity constraint
+│   ├── OptimizationResult.swift       # Result type: selected lines, match quality, all combos
+│   ├── CardModels.swift               # SwiftData: Card + CardTransaction
+│   ├── SavedCalculationModels.swift   # SwiftData: SavedCalculation + JSON combo payload
+│   └── SavedItemModels.swift          # SwiftData: SavedItemList + SavedItem
 │
 ├── ViewModel/
-│   ├── InputViewModel.swift       # Balance text, items, calculate pipeline
-│   └── ReportViewModel.swift      # Display formatting, combo index, summary copy
+│   ├── InputViewModel.swift           # Balance state, item list, calculate pipeline
+│   └── ReportViewModel.swift          # Combo navigation, display formatting, summary copy
 │
-├── View/
-│   ├── MainTabView.swift          # Tab bar: Calculate + History
-│   │
-│   ├── InputView/
-│   │   ├── InputView.swift
-│   │   ├── BalanceInputCard.swift
-│   │   ├── ItemRowView.swift
-│   │   └── AddItemButton.swift
-│   │
-│   ├── ReportView/
-│   │   ├── ReportView.swift
-│   │   ├── ReportHeaderView.swift
-│   │   ├── StatCardView.swift
-│   │   └── ResultItemRowView.swift
-│   │
-│   ├── History/
-│   │   └── CalculationHistoryView.swift
-│   │
-│   ├── SavedLists/
-│   │   ├── SavedListsView.swift
-│   │   └── SavedListDetailView.swift
-│   │
-│   └── Components/
-│       └── CurrencyPriceField.swift
-│
-├── Tests/                         # Unit + UI tests (Xcode target)
-│
-└── SCREENS/                       # App screenshots (by flow)
-    ├── 01_INPUT/
-    ├── 02_REPORT/
-    ├── 03_HISTORY/
-    └── 04_SAVED_LISTS/
+└── View/
+    ├── MainTabView.swift              # Root tab bar: Wallet + History
+    ├── Onboarding/                    # Three-screen first-launch flow
+    ├── Cards/                         # Wallet overview, card detail, creation, transaction log
+    ├── InputView/                     # Minimizer input screen and item rows
+    ├── ReportView/                    # Result display and combination navigator
+    ├── History/                       # Calculation history list
+    ├── SavedLists/                    # List browser and detail editor
+    └── Components/                    # CurrencyPriceField and shared UI pieces
+```
+
+---
+
+## Tests
+
+The project ships two test targets built with different frameworks.
+
+### Unit Tests — `BalanceZeroTests`
+
+Written with Swift Testing (`@Suite`, `@Test`, `#expect`). Ten suites covering the optimizer engine, persistence models, and both view models.
+
+| Suite | What it covers |
+|---|---|
+| **Balance Optimizer** | Perfect, partial, and no-solution outcomes; mandatory quantity constraints (exact and minimum); multiple-combination enumeration and deduplication; performance ceiling of 3 seconds at maximum supported balance |
+| **Currency Input Helper** | Digit extraction and formatting; cents-to-string and string-to-cents conversion; round-trip fidelity across all common values |
+| **Input View Model** | Initial state; item add and remove; name and price mutations; balance parsing with dollar signs and commas; `canCalculate` guard; validation messages; async calculate pipeline tested against a mock optimizer; reset behavior |
+| **Report View Model** | Match label and quality flags; combination index navigation with clamping at bounds; display formatting for balance, spent, and remaining; `summaryMessage` copy for all three match states |
+| **Card Model** | Balance computation with zero, multiple, and overflowing transactions; `clampedCurrentBalance`; cascade delete; design raw-value round-trips; invalid raw value fallback to `.classic` |
+| **Card Transactions** | Note and amount persistence; back-references to parent card; zero-amount transactions; `createdAt` auto-population; deleting a transaction without deleting the card |
+| **Card Design** | All seven designs present with unique raw values, non-empty display names, exactly two gradient colors each, and a valid SF Symbol name |
+| **Saved Calculation Serialization** | `SavedCalculation.from()` factory; match quality encoding and decoding for all three cases; card metadata preservation; all-selections JSON round-trip with 50-item payloads; fallback behavior for nil and corrupted data blobs |
+| **Saved Calculation Persistence** | SwiftData fetch, cascade delete of result items, back-references from result item to parent calculation, and card metadata survival independent of a live `Card` model |
+| **Saved Item List** | Create with items; cascade delete; item and list name mutation; edge cases including empty name, 500-character name, duplicate names across lists, zero-price items, and a 100-item stress test; descending sort by `createdAt` |
+
+### UI Tests — `BalanceZeroUITests`
+
+Written with XCTest. Cover the primary user flows end-to-end on a live simulator.
+
+- App launches to the Wallet tab showing empty state; History tab shows its own empty state and switching back restores the wallet
+- Card creation: tapping "Add Your First Card" opens the sheet; Cancel dismisses it; Create Card is disabled until both name and balance are entered
+- Wallet with a card: card name and count appear after creation; tapping the card navigates to card detail
+- Minimizer flow: card detail exposes the Minimizer button; the Minimizer opens with the correct navigation title; Find Zero is disabled without a priced item
+- History integrity: visiting the Minimizer without running a calculation leaves the History tab empty
+
+### Running the Tests
+
+In Xcode, press `Cmd U`. From the terminal:
+
+```bash
+xcodebuild test \
+  -scheme BalanceZero \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ---
 
 ## Getting Started
 
-### Prerequisites
-- Xcode 17 or later
-- iOS 26+ device or simulator
-- Swift Package Manager (no external packages to resolve)
-
-### Install & Run
+**Requirements:** Xcode 17 and an iOS 18 simulator or device.
 
 ```bash
 git clone https://github.com/keyursavalia/BalanceZero.git
@@ -196,53 +238,26 @@ cd BalanceZero
 open BalanceZero.xcodeproj
 ```
 
-Select a simulator or connected device and press **⌘R**.
-
-> No API keys, no backend, no configuration. Optimization runs on-device; SwiftData stores lists and history in the app sandbox.
+Press `Cmd R`. There are no API keys, no backend services, and no packages to resolve. The optimizer runs on-device and SwiftData handles all persistence in the app sandbox.
 
 ---
 
-## Dependencies
+## What's Next
 
-| Package | Purpose |
-|---|---|
-| — | *None.* Third-party SPM dependencies are not used. |
-
-Managed via Swift Package Manager — the project has no external package products to resolve.
-
----
-
-## Project Status
-
-**The app is feature-complete for the core loop the author set out to build:** enter balance and items, run optimization, browse tied best combinations when they exist, revisit runs from history, and reuse saved lists.
-
-That said, **contributions are very welcome.** If you spot a bug, have an idea, or want to extend the app, feel free to open a pull request or an issue. Some directions that could be interesting:
-
-- Share sheet / export of a result or shopping list
-- Home screen widget showing last balance or last perfect match
-- iPad adaptive layout and larger multitasking support
-- VoiceOver and Dynamic Type pass across all screens
-- CloudKit or iCloud sync for lists and history (with clear privacy copy)
-- Additional unit tests around `BalanceOptimizer` edge cases and persistence round-trips
+- **Share sheet** — export a combination as formatted text to send to whoever has the cart
+- **Home screen widget** — glanceable last balance and match quality without opening the app
+- **Accessibility pass** — thorough VoiceOver and Dynamic Type testing across all screens
+- **Budgeted mode** — optimize toward a spend target below the card balance, for when you have a budget limit on top of a fixed card
+- **SwiftData schema versioning** — lightweight migration plan in place before users accumulate meaningful history
 
 ---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-idea`
-3. Commit your changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-idea`
-5. Open a pull request
-
-Please keep PRs focused — one feature or fix per PR makes review much easier.
+Fork the repo, create a branch off `main`, and open a pull request. One fix or feature per PR keeps review tractable. Bug reports and ideas are welcome as GitHub issues.
 
 ---
 
 ## License
 
-This project is available under the [MIT License](LICENSE).
-
----
-
-*Built with SwiftUI, SwiftData, and the conviction that “what should I buy to zero this card?” deserves a real answer.*
+[MIT](LICENSE) · © 2026 Keyur Savalia
