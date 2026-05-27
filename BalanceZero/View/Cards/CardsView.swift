@@ -71,6 +71,7 @@ struct CardsView: View {
                     .font(.system(size: 10, weight: .bold))
                     .tracking(2)
                     .foregroundStyle(AppTheme.outline)
+                    .accessibilityHidden(true)
                 Text("\(cards.count) Card\(cards.count == 1 ? "" : "s")")
                     .font(.system(size: 28, weight: .heavy))
                     .foregroundStyle(AppTheme.primary)
@@ -127,6 +128,7 @@ struct CardsView: View {
                                     .opacity(phase.isIdentity ? 1.0 : 0.65)
                             }
                         }
+                        .accessibilityLabel(card.name)
                         .buttonStyle(.plain)
                     }
                 }
