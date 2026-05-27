@@ -34,21 +34,29 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BalanceZeroTests/BalanceOptimizerTests.swift,
+				BalanceZeroTests/CalculatorTests.swift,
+				BalanceZeroTests/CardTests.swift,
+				BalanceZeroTests/HistoryTests.swift,
 				BalanceZeroTests/SavedItemListTests.swift,
+				BalanceZeroTests/SavedListsTests.swift,
 				BalanceZeroUITests/BalanceZeroUITests.swift,
 				BalanceZeroUITests/BalanceZeroUITestsLaunchTests.swift,
 			);
 			target = 3C0A734B2F49186F00294450 /* BalanceZero */;
 		};
-		3C0A73802F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */ = {
+		3C6AC77F2FC587F90035D1D9 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BalanceZeroTests/BalanceOptimizerTests.swift,
+				BalanceZeroTests/CalculatorTests.swift,
+				BalanceZeroTests/CardTests.swift,
+				BalanceZeroTests/HistoryTests.swift,
 				BalanceZeroTests/SavedItemListTests.swift,
+				BalanceZeroTests/SavedListsTests.swift,
 			);
 			target = 3C0A73582F49187000294450 /* BalanceZeroTests */;
 		};
-		3C0A73812F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */ = {
+		3C6AC7822FC588060035D1D9 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BalanceZeroUITests/BalanceZeroUITests.swift,
@@ -68,8 +76,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3C0A737F2F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZero" target */,
-				3C0A73802F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */,
-				3C0A73812F4918CF00294450 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */,
+				3C6AC77F2FC587F90035D1D9 /* Exceptions for "Tests" folder in "BalanceZeroTests" target */,
+				3C6AC7822FC588060035D1D9 /* Exceptions for "Tests" folder in "BalanceZeroUITests" target */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -494,12 +502,17 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DW9QSX99UM;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keyursavalia.BalanceZeroTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -516,12 +529,17 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DW9QSX99UM;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keyursavalia.BalanceZeroTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -538,6 +556,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DW9QSX99UM;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keyursavalia.BalanceZeroUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -558,6 +577,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DW9QSX99UM;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keyursavalia.BalanceZeroUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
