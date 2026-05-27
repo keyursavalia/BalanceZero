@@ -13,6 +13,7 @@ struct CardDetailView: View {
     @State private var showEditCard = false
     @State private var showDeleteAlert = false
     @State private var navigateToCalculator = false
+    @State private var transactionToDelete: CardTransaction?
 
     private var sortedTransactions: [CardTransaction] {
         card.transactions.sorted { $0.createdAt > $1.createdAt }
@@ -85,6 +86,20 @@ struct CardDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently delete \"\(card.name)\" and all its transactions. This action cannot be undone.")
+        }
+        .alert("Delete Transaction?", isPresented: Binding(
+            get: { transactionToDelete != nil },
+            set: { if !$0 { transactionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let tx = transactionToDelete { deleteTransaction(tx) }
+                transactionToDelete = nil
+            }
+            Button("Cancel", role: .cancel) { transactionToDelete = nil }
+        } message: {
+            if let tx = transactionToDelete {
+                Text("\"\(tx.note)\" for \(formatCents(tx.amountInCents)) will be removed and your balance will update.")
+            }
         }
     }
 
@@ -213,11 +228,11 @@ struct CardDetailView: View {
                 LazyVStack(spacing: 8) {
                     ForEach(sortedTransactions) { tx in
                         TransactionRowView(transaction: tx)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            .contextMenu {
                                 Button(role: .destructive) {
-                                    deleteTransaction(tx)
+                                    transactionToDelete = tx
                                 } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("Delete Transaction", systemImage: "trash")
                                 }
                             }
                     }
@@ -306,6 +321,7 @@ struct CardDetailView: View {
     }
 
     private func deleteTransaction(_ tx: CardTransaction) {
+        card.transactions.removeAll { $0.id == tx.id }
         modelContext.delete(tx)
         try? modelContext.save()
     }
