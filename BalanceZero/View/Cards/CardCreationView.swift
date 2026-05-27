@@ -385,6 +385,7 @@ private struct LargeBalanceDigitField: UIViewRepresentable {
         field.tintColor = UIColor(AppTheme.primary)
         field.borderStyle = .none
         field.autocorrectionType = .no
+        field.accessibilityIdentifier = "cardBalanceField"
         field.delegate = context.coordinator
         field.text = formattedValue
         updateColor(field)
@@ -392,6 +393,10 @@ private struct LargeBalanceDigitField: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UITextField, context: Context) {
+        // Keep coordinator's binding reference current so shouldChangeCharactersIn
+        // always reads/writes the live @State, not a stale captured copy.
+        context.coordinator.parent = self
+        context.coordinator.syncLocalDigits()
         if uiView.text != formattedValue { uiView.text = formattedValue }
         updateColor(uiView)
         pinCursorToEnd(uiView)
@@ -414,21 +419,31 @@ private struct LargeBalanceDigitField: UIViewRepresentable {
 
     final class Coordinator: NSObject, UITextFieldDelegate {
         var parent: LargeBalanceDigitField
-        init(_ parent: LargeBalanceDigitField) { self.parent = parent }
+        // Local accumulator so rapid XCTest keystrokes never read a mid-flight binding value.
+        private var localDigits: String = ""
+
+        init(_ parent: LargeBalanceDigitField) {
+            self.parent = parent
+            self.localDigits = parent.digits
+        }
+
+        func syncLocalDigits() {
+            localDigits = parent.digits
+        }
 
         func textField(_ textField: UITextField,
                        shouldChangeCharactersIn range: NSRange,
                        replacementString string: String) -> Bool {
-            let current = parent.digits
-            let updated: String
             if string.isEmpty {
-                updated = current.isEmpty ? "" : String(current.dropLast())
+                localDigits = localDigits.isEmpty ? "" : String(localDigits.dropLast())
             } else {
                 let filtered = string.filter { $0.isNumber }
                 guard !filtered.isEmpty else { return false }
-                updated = current + filtered
+                localDigits += filtered
             }
-            parent.digits = CurrencyInputHelper.extractDigits(from: updated, maxDigits: parent.maxDigits)
+            let extracted = CurrencyInputHelper.extractDigits(from: localDigits, maxDigits: parent.maxDigits)
+            localDigits = extracted
+            parent.digits = extracted
             return false
         }
 
