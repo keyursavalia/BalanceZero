@@ -18,6 +18,12 @@
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" />
 </p>
 
+<p align="center">
+  <a href="https://apps.apple.com/app/balancezero/id6773536458">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="48" />
+  </a>
+</p>
+
 ---
 
 ## The Problem
