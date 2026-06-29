@@ -42,7 +42,7 @@ I was at Trader Joe's with about nineteen dollars left on a gift card. I had a f
 
 <br/>
 
-A three-screen first-launch flow that introduces the two core ideas — card tracking and the balance optimizer — and walks through adding a card, logging a transaction, and what the Minimizer does. Shown once; dismissed permanently after completion.
+A three-screen first-launch flow shown once on install. The first screen frames the core idea — spending a card balance to the cent. The second walks through picking a card design and entering a starting balance. The third demonstrates logging a transaction. Dismissed permanently once the user taps through.
 
 ---
 
