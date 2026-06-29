@@ -87,18 +87,20 @@ Tapping a card opens its detail view: a running transaction log, remaining balan
 ## Minimizer
 
 <table align="center"><tr>
-  <td align="center"><img src="SCREENS/minimizer.png" width="190" alt="Minimizer input" /><br/><sub>Minimizer input</sub></td>
-  <td align="center"><img src="SCREENS/report-1.png" width="190" alt="Perfect match — option 1" /><br/><sub>Option 1 of 2</sub></td>
-  <td align="center"><img src="SCREENS/report-2.png" width="190" alt="Perfect match — option 2" /><br/><sub>Option 2 of 2</sub></td>
+  <td align="center"><img src="SCREENS/minimizer.png" width="190" alt="Minimizer input" /><br/><sub>Enter items and prices</sub></td>
+  <td align="center"><img src="SCREENS/report-1.png" width="190" alt="Perfect match — option 1" /><br/><sub>Result — option 1 of 2</sub></td>
+  <td align="center"><img src="SCREENS/report-2.png" width="190" alt="Perfect match — option 2" /><br/><sub>Result — option 2 of 2</sub></td>
 </tr></table>
 
 <br/>
 
-- ATM-style input fields — digits land correctly from the right; no cursor positioning required
-- Optional mandatory quantities per item: *exactly N* locks a precise count; *at least N* lets the optimizer add more units of that item if it helps reach zero
+Enter a card balance, add items with prices, and tap Find Zero. The optimizer finds every combination of those items whose total cost comes as close to the balance as possible — ideally hitting exact zero. The report shows all tied-optimal combinations so you can pick the one that works for how you actually shop.
+
+- ATM-style price input — digits land from the right, no cursor positioning required
+- Optional mandatory quantities per item: *exactly N* locks a precise count; *at least N* lets the optimizer add more units if it helps reach zero
 - Load a saved item list into the current session in one tap
-- Report shows remaining balance, original balance, and total spend; remaining balance turns green and shows a confirmed badge when zero is achieved
-- Multiple equally optimal combinations are all surfaced and browseable with a `< Option X of N >` navigator — useful when one combination is more practical even though mathematically tied
+- Report shows remaining balance, original balance, and total spend; remaining balance turns green with a confirmed badge when zero is achieved
+- All equally optimal combinations are surfaced and browseable with a `< Option X of N >` navigator
 
 ---
 
