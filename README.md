@@ -56,6 +56,8 @@ A three-screen first-launch flow shown once on install. The first screen frames 
 
 <br/>
 
+The home screen of the app. Cards are displayed as stylized previews showing the card name, remaining balance, and a visual design. A summary row at the top aggregates total balance and total spent across all cards at once.
+
 - Add as many cards as you have — gift cards, prepaid Visa and Mastercard, store credit, or any fixed-balance card
 - Seven built-in card designs; custom cards accept a brand name and a color of your choice
 - Per-card transaction log with category icons inferred from the note (coffee, gas, groceries, and more recognized automatically)
