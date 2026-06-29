@@ -123,9 +123,10 @@ Named catalogues of items and prices that persist between Minimizer sessions. If
 
 ## History
 
-- Every Minimizer run saves automatically
+Every Minimizer run is saved automatically and accessible from the History tab alongside the Wallet. No manual saving required — close the app and come back later to review any past result in full.
+
 - Tap any past result to replay the full report, including all the combinations found at the time
-- Month-to-date spend total and perfect-match count shown at the top when history exists
+- Month-to-date spend total and perfect-match count shown at the top of the list when history exists
 - Swipe to remove individual entries; clear all at once from the toolbar with a confirmation prompt
 
 ---
