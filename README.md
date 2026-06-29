@@ -69,16 +69,18 @@ The home screen of the app. Cards are displayed as stylized previews showing the
 ## Card Detail & Transactions
 
 <table align="center"><tr>
-  <td align="center"><img src="SCREENS/card-detail.png" width="190" alt="Card detail with transactions" /><br/><sub>Card detail</sub></td>
-  <td align="center"><img src="SCREENS/log-transaction.png" width="190" alt="Log a transaction" /><br/><sub>Log a transaction</sub></td>
+  <td align="center"><img src="SCREENS/card-detail.png" width="190" alt="Card detail with transactions" /><br/><sub>Transaction history</sub></td>
+  <td align="center"><img src="SCREENS/log-transaction.png" width="190" alt="Log a transaction" /><br/><sub>Logging a spend</sub></td>
 </tr></table>
 
 <br/>
 
-- Tap any card to see its full transaction history, remaining balance, and total spent at a glance
-- Open the Minimizer directly from a card to find the best combination for that card's remaining balance
-- Log a new transaction with an amount and an optional note; the balance updates immediately
-- Category icons are inferred automatically from the note — common keywords like "coffee", "gas", and "groceries" map to the matching SF Symbol
+Tapping a card opens its detail view: a running transaction log, remaining balance, and a button to launch the Minimizer pre-loaded with that card's balance. Transactions can be added at any time from the same screen.
+
+- Full transaction history with timestamps, amounts, and inferred category icons
+- Log a spend with an amount and an optional note; the card balance updates immediately
+- Category icons are inferred from the note text — keywords like "coffee", "gas", and "groceries" map to the matching SF Symbol automatically
+- Open the Minimizer directly from a card to find the best item combination for that card's remaining balance
 
 ---
 
