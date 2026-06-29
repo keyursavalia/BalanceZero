@@ -32,21 +32,7 @@ I was at Trader Joe's with about nineteen dollars left on a gift card. I had a f
 
 ---
 
-## What It Does
-
-BalanceZero is two things in one.
-
-**A card wallet.** Add your gift cards, prepaid cards, and store credit. Each card tracks its own balance as you log transactions against it. You always know exactly what is left and where it went.
-
-**A spend minimizer.** When you are ready to shop, open the Minimizer from your card. Enter the items you are considering and their prices. The app finds the combination that brings your remaining balance as close to zero as possible — ideally exactly zero — using a dynamic programming engine running entirely on-device. When multiple equally optimal combinations exist, you can browse all of them and pick the one that works for how you actually shop.
-
-No account. No internet. No subscriptions. Everything lives on your device.
-
----
-
-## Screenshots
-
-### Onboarding
+## Onboarding
 
 <table align="center"><tr>
   <td align="center"><img src="SCREENS/onboarding-1.png" width="190" alt="Your Balance, Simplified" /><br/><sub>Your Balance, Simplified</sub></td>
@@ -56,7 +42,11 @@ No account. No internet. No subscriptions. Everything lives on your device.
 
 <br/>
 
-### Wallet
+A three-screen first-launch flow that introduces the two core ideas — card tracking and the balance optimizer — and walks through adding a card, logging a transaction, and what the Minimizer does. Shown once; dismissed permanently after completion.
+
+---
+
+## Wallet
 
 <table align="center"><tr>
   <td align="center"><img src="SCREENS/wallet-empty.png" width="190" alt="Empty wallet" /><br/><sub>Empty state</sub></td>
@@ -66,7 +56,15 @@ No account. No internet. No subscriptions. Everything lives on your device.
 
 <br/>
 
-### Card Detail & Transaction Log
+- Add as many cards as you have — gift cards, prepaid Visa and Mastercard, store credit, or any fixed-balance card
+- Seven built-in card designs; custom cards accept a brand name and a color of your choice
+- Per-card transaction log with category icons inferred from the note (coffee, gas, groceries, and more recognized automatically)
+- Balance updates immediately as you log transactions; current balance and total spent shown at a glance
+- Aggregate view of total balance and total spent across all cards in your wallet
+
+---
+
+## Card Detail & Transactions
 
 <table align="center"><tr>
   <td align="center"><img src="SCREENS/card-detail.png" width="190" alt="Card detail with transactions" /><br/><sub>Card detail</sub></td>
@@ -75,7 +73,14 @@ No account. No internet. No subscriptions. Everything lives on your device.
 
 <br/>
 
-### Minimizer & Report
+- Tap any card to see its full transaction history, remaining balance, and total spent at a glance
+- Open the Minimizer directly from a card to find the best combination for that card's remaining balance
+- Log a new transaction with an amount and an optional note; the balance updates immediately
+- Category icons are inferred automatically from the note — common keywords like "coffee", "gas", and "groceries" map to the matching SF Symbol
+
+---
+
+## Minimizer
 
 <table align="center"><tr>
   <td align="center"><img src="SCREENS/minimizer.png" width="190" alt="Minimizer input" /><br/><sub>Minimizer input</sub></td>
@@ -85,40 +90,30 @@ No account. No internet. No subscriptions. Everything lives on your device.
 
 <br/>
 
-### Saved Lists
-
-<table align="center"><tr>
-  <td align="center"><img src="SCREENS/saved-lists.png" width="190" alt="Saved lists" /><br/><sub>Your lists</sub></td>
-  <td align="center"><img src="SCREENS/list-detail.png" width="190" alt="List detail" /><br/><sub>List detail</sub></td>
-</tr></table>
-
----
-
-## Features
-
-### Wallet
-
-- Add as many cards as you have — gift cards, prepaid Visa and Mastercard, store credit, or any fixed-balance card
-- Seven built-in card designs; custom cards accept a brand name and a color of your choice
-- Per-card transaction log with category icons inferred from the note (coffee, gas, groceries, and more recognized automatically)
-- Balance updates immediately as you log transactions; current balance and total spent shown at a glance
-- Aggregate view of total balance and total spent across all cards in your wallet
-
-### Minimizer
-
 - ATM-style input fields — digits land correctly from the right; no cursor positioning required
 - Optional mandatory quantities per item: *exactly N* locks a precise count; *at least N* lets the optimizer add more units of that item if it helps reach zero
 - Load a saved item list into the current session in one tap
 - Report shows remaining balance, original balance, and total spend; remaining balance turns green and shows a confirmed badge when zero is achieved
 - Multiple equally optimal combinations are all surfaced and browseable with a `< Option X of N >` navigator — useful when one combination is more practical even though mathematically tied
 
-### Saved Lists
+---
+
+## Saved Lists
+
+<table align="center"><tr>
+  <td align="center"><img src="SCREENS/saved-lists.png" width="190" alt="Saved lists" /><br/><sub>Your lists</sub></td>
+  <td align="center"><img src="SCREENS/list-detail.png" width="190" alt="List detail" /><br/><sub>List detail</sub></td>
+</tr></table>
+
+<br/>
 
 - Create named catalogues of items with prices for stores you shop at regularly
 - Edit name, add items, and remove items at any time
 - One tap loads a list directly into the Minimizer
 
-### History
+---
+
+## History
 
 - Every Minimizer run saves automatically
 - Tap any past result to replay the full report, including all the combinations found at the time
