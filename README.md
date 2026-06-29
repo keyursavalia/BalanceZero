@@ -107,14 +107,16 @@ Enter a card balance, add items with prices, and tap Find Zero. The optimizer fi
 ## Saved Lists
 
 <table align="center"><tr>
-  <td align="center"><img src="SCREENS/saved-lists.png" width="190" alt="Saved lists" /><br/><sub>Your lists</sub></td>
-  <td align="center"><img src="SCREENS/list-detail.png" width="190" alt="List detail" /><br/><sub>List detail</sub></td>
+  <td align="center"><img src="SCREENS/saved-lists.png" width="190" alt="Saved lists" /><br/><sub>Your saved lists</sub></td>
+  <td align="center"><img src="SCREENS/list-detail.png" width="190" alt="List detail" /><br/><sub>Items in a list</sub></td>
 </tr></table>
 
 <br/>
 
+Named catalogues of items and prices that persist between Minimizer sessions. If you regularly shop at the same store, build a list of its products once and load it into any future Minimizer run in one tap instead of re-entering prices each time.
+
 - Create named catalogues of items with prices for stores you shop at regularly
-- Edit name, add items, and remove items at any time
+- Edit the list name, add items, and remove items at any time
 - One tap loads a list directly into the Minimizer
 
 ---
